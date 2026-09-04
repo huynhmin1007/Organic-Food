@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f0f7e8;
+  --color-primary-100: #d9edca;
+  --color-primary-500: #6aaa22; /** Màu chủ đạo **/
+  --color-primary-600: #579119;
+  --color-primary-700: #437010;
+
+  --color-red-sale: #e53e3e; /* giá khuyến mãi, badge */
+  --color-orange: #f97316;
+
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f3f3f3;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-600: #6b7280;
+  --color-neutral-800: #222222;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-neutral-800 antialiased;
+  }
+}
