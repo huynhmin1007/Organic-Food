@@ -102,17 +102,19 @@ export default function Header() {
               <div className="leading-tight">
                 {!isAuthenticated ? (
                   <div>
-                    <Link to="/account/info">Tài khoản</Link>
+                    <p>Tài khoản</p>
                     <Link
                       to="/account/login"
                       className="font-bold hover:text-primary-100"
                     >
-                      Đăng nhập
+                      <p>Đăng nhập</p>
                     </Link>
                   </div>
                 ) : (
                   <div>
-                    <p className="">{user?.fullName}</p>
+                    <Link to="/account/info">
+                      <p className="">{user?.fullName}</p>
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="font-bold hover:text-primary-100"

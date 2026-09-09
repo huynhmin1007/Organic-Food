@@ -33,3 +33,11 @@ export async function verifyRegisterOtp(
 ): Promise<void> {
   await axiosClient.post<ApiResponse<null>>("/auth/register/verify", payload);
 }
+
+export async function resendRegisterOtp(email: string): Promise<string> {
+  const { data } = await axiosClient.post<ApiResponse<string>>(
+    "/auth/register/resend-otp",
+    { email },
+  );
+  return data.data;
+}

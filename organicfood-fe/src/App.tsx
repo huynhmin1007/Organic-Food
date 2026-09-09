@@ -11,6 +11,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import RegisterPage from "./pages/RegisterPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import OrderSuccessPage from "./pages/OrderSuccessPage";
+import InfoPage from "./pages/InfoPage";
 
 function App() {
   return (
@@ -19,6 +21,10 @@ function App() {
         <CartProvider>
           <Routes>
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route
+              path="/order/place-order-successful"
+              element={<OrderSuccessPage />}
+            />
 
             <Route element={<MainLayout />}>
               <Route path="/" element={<HomePage />} />
@@ -31,6 +37,7 @@ function App() {
               <Route path="/account/login" element={<LoginPage />} />
               <Route path="/account/register" element={<RegisterPage />} />
               <Route path="/account/verify-otp" element={<VerifyOtpPage />} />
+              <Route path="/account/info" element={<InfoPage />} />
             </Route>
           </Routes>
         </CartProvider>

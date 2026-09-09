@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { isValidEmail, isValidPassword } from "../lib/validators";
 import Container from "../components/ui/Container";
@@ -7,6 +7,8 @@ import Container from "../components/ui/Container";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from ?? "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,7 +48,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate("/");
+      navigate(from);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {
