@@ -52,6 +52,8 @@ app:
       - method: POST
         pattern: /auth/register/verify
       - method: POST
+        pattern: /auth/register/resend-otp
+      - method: POST
         pattern: /auth/token/refresh
       - method: GET
         pattern: /categories/**

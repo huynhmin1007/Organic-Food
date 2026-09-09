@@ -349,12 +349,14 @@ CREATE TABLE IF NOT EXISTS ordering.order_items (
     product_id UUID NOT NULL,
     product_name VARCHAR(255) NOT NULL,  -- snapshot tên sp tại thời điểm mua
     product_sku VARCHAR(50) NOT NULL,    -- snapshot sku
+    product_image_url TEXT,
 
     discount_id UUID NULL,              -- chỉ để truy vết/thống kê, KHÔNG dùng để tính lại giá
     discount_type VARCHAR(50),
     discount_label VARCHAR(255) NULL,    -- snapshot tên chương trình, nếu có áp dụng
 
     quantity INT NOT NULL,
+    original_price NUMERIC(12,2),
     unit_price NUMERIC(12,2) NOT NULL,
     free_quantity INT NOT NULL DEFAULT 0,
     line_total NUMERIC(12,2) NOT NULL DEFAULT 0,

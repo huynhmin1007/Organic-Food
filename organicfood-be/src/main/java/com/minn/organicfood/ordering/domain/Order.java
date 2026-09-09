@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -25,6 +27,10 @@ public class Order extends AuditableEntity<UUID> {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
+    @Transient
+    @Builder.Default
+    private boolean isNew = true;
+
     @Column(name = "customer_id")
     private UUID customerId;
 
@@ -38,4 +44,8 @@ public class Order extends AuditableEntity<UUID> {
 
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<OrderItem> items = new HashSet<>();
 }

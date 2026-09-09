@@ -12,7 +12,12 @@ public record EventEnvelope<T> (
         Instant occurredAt,
         T payload
 ) {
-    public static <T> EventEnvelope<T> of(EventType eventType, String correlationId, String producer, T payload) {
+    public static <T> EventEnvelope<T> of(
+            EventType eventType,
+            String correlationId,
+            String producer,
+            T payload
+    ) {
         return new EventEnvelope<>(
                 UuidCreator.getTimeOrderedEpoch().toString(),
                 eventType,

@@ -23,10 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.IsoFields;
 import java.util.List;
@@ -57,7 +57,7 @@ public class ProductService {
     }
 
     public PageResponse<ProductResponse> filterProducts(ProductFilterRequest filter) {
-        if(filter.getProductIds() != null && !filter.getProductIds().isEmpty()) {
+        if (filter.getProductIds() != null && !filter.getProductIds().isEmpty()) {
             List<Product> products = productRepository.findAllById(filter.getProductIds());
             List<UUID> ids = products.stream().map(Product::getId).toList();
             Map<UUID, List<ProductDiscount>> discounts = productDiscountRepository.findActiveForProducts(ids, Instant.now()).stream()
@@ -86,6 +86,10 @@ public class ProductService {
         Page<Product> page = productRepository.findAll(spec, pageable);
 
         return PageResponse.of(enrichWithDiscounts(page, filter.getOnSale()));
+    }
+
+    public boolean existsById(UUID productId) {
+        return productRepository.existsById(productId);
     }
 
     private Page<ProductResponse> enrichWithDiscounts(Page<Product> page, Boolean onSale) {
@@ -162,5 +166,20 @@ public class ProductService {
             case BEST_SELLING_MONTHLY -> SalePeriodType.MONTHLY;
             default -> throw new IllegalArgumentException("Not a bestseller sort: " + sort);
         };
+    }
+
+    @Transactional
+    public void decrementStock(UUID productId, int quantity) {
+        productRepository.decrementStock(productId, quantity);
+    }
+
+    public Product getProductById(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    public Product getAndLockProduct(UUID productId) {
+        return productRepository.findAndLockById(productId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.PRODUCT_NOT_FOUND));
     }
 }

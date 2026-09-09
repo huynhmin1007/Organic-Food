@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class UserAddressResponse {
 
+    Long id;
     String address;
     boolean isDefault;
 }

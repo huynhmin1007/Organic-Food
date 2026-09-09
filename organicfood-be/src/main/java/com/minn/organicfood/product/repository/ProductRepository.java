@@ -2,9 +2,8 @@ package com.minn.organicfood.product.repository;
 
 import com.minn.organicfood.product.domain.Product;
 import com.minn.organicfood.product.dto.projection.ProductDetailCoreProjection;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -30,4 +29,16 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
             WHERE (:id IS NOT NULL AND p.id = :id) OR (:slug IS NOT NULL AND p.slug = :slug)
             """)
     Optional<ProductDetailCoreProjection> findDetail(@Param("id") UUID id, @Param("slug") String slug);
+
+    @Modifying
+    @Query("""
+            UPDATE Product p
+            SET p.stockQuantity = p.stockQuantity - :quantity
+            WHERE p.id = :id AND p.stockQuantity >= :quantity
+            """)
+    void decrementStock(@Param("id") UUID id, @Param("quantity") Integer quantity);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id = :id")
+    Optional<Product> findAndLockById(@Param("id") UUID id);
 }
