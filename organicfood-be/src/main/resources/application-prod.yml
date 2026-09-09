@@ -10,9 +10,7 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD:}
+      url: ${REDIS_URL}
       database: 0
       connect-timeout: 2000ms
       timeout: 2000ms
