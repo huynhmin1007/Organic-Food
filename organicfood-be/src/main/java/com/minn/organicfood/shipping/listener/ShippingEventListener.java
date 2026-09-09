@@ -1,9 +1,9 @@
-package com.minn.organicfood.notification.listener;
+package com.minn.organicfood.shipping.listener;
 
-import com.minn.organicfood.notification.listener.handler.NotificationEventHandler;
 import com.minn.organicfood.shared.event.EventEnvelope;
 import com.minn.organicfood.shared.event.EventType;
 import com.minn.organicfood.shared.event.IdempotentEventGuard;
+import com.minn.organicfood.shipping.listener.handler.ShippingEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -14,25 +14,25 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class NotificationEventListener {
+public class ShippingEventListener {
 
-    private static final String CONSUMER = "notification-module";
+    private static final String CONSUMER = "shipping-module";
 
     private final IdempotentEventGuard idempotentEventGuard;
-    private final Map<EventType, NotificationEventHandler<?>> handlers;
+    private final Map<EventType, ShippingEventHandler<?>> handlers;
 
-    public NotificationEventListener(IdempotentEventGuard idempotentEventGuard,
-                                     List<NotificationEventHandler<?>> allHandlers) {
+    public ShippingEventListener(IdempotentEventGuard idempotentEventGuard,
+                                 List<ShippingEventHandler<?>> allHandlers) {
         this.idempotentEventGuard = idempotentEventGuard;
         this.handlers = allHandlers.stream()
                 .collect(Collectors.toUnmodifiableMap(
-                        NotificationEventHandler::support, h -> h));
+                        ShippingEventHandler::support, h -> h));
     }
 
     @ApplicationModuleListener
     public void on(EventEnvelope<?> envelope) {
         idempotentEventGuard.runOnce(envelope, CONSUMER, () -> {
-            NotificationEventHandler<?> handler = handlers.get(envelope.eventType());
+            ShippingEventHandler<?> handler = handlers.get(envelope.eventType());
             if (handler == null) {
                 return;
             }
@@ -41,7 +41,7 @@ public class NotificationEventListener {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void invoke(NotificationEventHandler<T> handler, Object payload) {
+    private <T> void invoke(ShippingEventHandler<T> handler, Object payload) {
         T typed = ((Class<T>) handler.payloadType()).cast(payload);
         handler.handle(typed);
     }

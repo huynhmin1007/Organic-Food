@@ -1,9 +1,6 @@
 package com.minn.organicfood.identity.controller;
 
-import com.minn.organicfood.identity.dto.request.RefreshTokenRequest;
-import com.minn.organicfood.identity.dto.request.RegisterRequest;
-import com.minn.organicfood.identity.dto.request.TokenExchangeRequest;
-import com.minn.organicfood.identity.dto.request.VerifyOtpRequest;
+import com.minn.organicfood.identity.dto.request.*;
 import com.minn.organicfood.identity.dto.response.AuthenticationResponse;
 import com.minn.organicfood.identity.service.AuthenticationService;
 import jakarta.validation.Valid;
@@ -35,6 +32,13 @@ public class AuthenticationController {
     public String verifyRegister(@RequestBody @Valid VerifyOtpRequest request) {
         authenticationService.verifyRegister(request);
         return "Account register successfully";
+    }
+
+    @PostMapping("/register/resend-otp")
+    public String register(@RequestBody @Valid ResendOtpRequest request) {
+        log.info("Resend OTP request: {}", request);
+        authenticationService.resendOtp(request.getEmail());
+        return "OTP sent to your email, please check your inbox";
     }
 
     @PostMapping("/login")

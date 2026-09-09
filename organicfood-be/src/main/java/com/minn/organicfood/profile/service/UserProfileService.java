@@ -61,6 +61,7 @@ public class UserProfileService {
             }
         });
 
+        newAddress.setUserProfile(profile);
         profile.getAddresses().add(newAddress);
 
         profileRepository.save(profile);

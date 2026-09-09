@@ -64,6 +64,9 @@ public class AuthenticationService {
     final static String BLACKLIST_PREFIX = "blacklist:jti:";
     final static String BANNED_SESSION_PREFIX = "banned-session:";
 
+    private static final long SESSION_TTL_SECONDS = 600; // phiên đăng ký sống 10 phút
+    private static final long OTP_TTL_SECONDS = 60;       // mã OTP chỉ 60s
+
     @Transactional
     public void register(RegisterRequest request) {
         String email = request.getEmail();
@@ -82,13 +85,13 @@ public class AuthenticationService {
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .otp(otp)
-                .expiredAt(Instant.now().plusSeconds(60))
+                .expiredAt(Instant.now().plusSeconds(OTP_TTL_SECONDS))
                 .build();
 
         redisService.set(
                 buildKey(email, "register"),
                 pendingInfo,
-                60,
+                SESSION_TTL_SECONDS,   // ← TTL của cả KEY (phiên), dài hơn
                 TimeUnit.SECONDS
         );
 
@@ -113,6 +116,10 @@ public class AuthenticationService {
                 PendingRegisterAccount.class);
 
         if (pendingInfo == null) {
+            throw BusinessException.of(OTP_EXPIRED);
+        }
+
+        if (Instant.now().isAfter(pendingInfo.getExpiredAt())) {
             throw BusinessException.of(OTP_EXPIRED);
         }
 
@@ -146,6 +153,27 @@ public class AuthenticationService {
                 UUID.randomUUID().toString(),
                 "identity",
                 new AccountRegisteredEvent(account.getId(), email, pendingInfo.getFullName(), pendingInfo.getPhone())
+        ));
+    }
+
+    public void resendOtp(String email) {
+        PendingRegisterAccount pendingInfo = redisService.get(buildKey(email, "register"),
+                PendingRegisterAccount.class);
+
+        if(pendingInfo == null) {
+            throw BusinessException.of(ACCOUNT_NOT_FOUND);
+        }
+
+        String otp = OtpUtils.generateOtp();
+        pendingInfo.setOtp(otp);
+        pendingInfo.setExpiredAt(Instant.now().plusSeconds(OTP_TTL_SECONDS));
+        redisService.set(buildKey(email, "register"), pendingInfo, SESSION_TTL_SECONDS, TimeUnit.SECONDS);
+
+        publisher.publishEvent(EventEnvelope.of(
+                EventType.ACCOUNT_INITIATED,
+                UUID.randomUUID().toString(),
+                "identity",
+                new AccountInitiatedEvent(email, pendingInfo.getFullName(), otp, 60)
         ));
     }
 

@@ -35,7 +35,7 @@ public class ProfileEventListener {
         idempotentEventGuard.runOnce(envelope, CONSUMER, () -> {
             ProfileEventHandler<?> handler = handlers.get(envelope.eventType());
             if (handler == null) {
-                throw new IllegalStateException("No handler for " + envelope.eventType());
+                return;
             }
             invoke(handler, envelope.payload());
         });
