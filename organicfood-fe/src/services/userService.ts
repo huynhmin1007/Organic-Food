@@ -1,16 +1,20 @@
 import axiosClient from "../lib/axiosClient";
 import type { ApiResponse } from "../lib/types/api";
-import type { UserAddressRequest } from "../lib/types/user";
+import type { AddUserAddressRequest } from "../lib/types/user";
 
 export async function addUserAddress(
-  payload: UserAddressRequest,
-): Promise<void> {
-  await axiosClient.post<ApiResponse<null>>("/users/addresses", payload);
+  payload: AddUserAddressRequest,
+): Promise<string> {
+  const { data } = await axiosClient.post<ApiResponse<string>>(
+    "/users/addresses",
+    payload,
+  );
+  return data.message;
 }
 
 export async function updateUserAddress(
   addressId: number,
-  payload: UserAddressRequest,
+  payload: AddUserAddressRequest,
 ): Promise<void> {
   await axiosClient.put<ApiResponse<null>>(
     `/users/addresses/${addressId}`,

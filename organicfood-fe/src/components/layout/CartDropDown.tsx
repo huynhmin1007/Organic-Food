@@ -3,12 +3,28 @@ import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, X } from "lucide-react";
 import { useCartDetails } from "../../hooks/useCartDetails";
 import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function CartDropdown() {
   const { items, totalPrice, loading, removeItem } = useCartDetails();
   const { totalQuantity } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    setCartOpen(false);
+    navigate("/checkout");
+  };
+
+  const goToLogin = () => {
+    navigate("/account/login", { state: { from: "/checkout" } });
+  };
 
   return (
     <div
@@ -116,13 +132,42 @@ export default function CartDropdown() {
                   type="button"
                   className="w-full bg-primary-600 hover:bg-primary-700 text-white
                              font-semibold py-2.5 rounded-md transition-colors"
-                  onClick={() => {
-                    navigate("/checkout");
-                  }}
+                  onClick={handleCheckout}
                 >
                   Tiến hành thanh toán
                 </button>
               </div>
+
+              {showLoginPrompt && (
+                <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+                  <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+                    <h2 className="text-lg font-bold mb-2">
+                      Yêu cầu đăng nhập
+                    </h2>
+                    <p className="text-sm text-neutral-600 mb-5">
+                      Vui lòng đăng nhập để tiến hành thanh toán.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowLoginPrompt(false)}
+                        className="flex-1 border border-neutral-300 rounded-md py-2.5 text-sm hover:bg-neutral-50"
+                      >
+                        Để sau
+                      </button>
+                      <button
+                        onClick={() => {
+                          goToLogin();
+                          setShowLoginPrompt(false);
+                        }}
+                        className="flex-1 bg-primary-600 hover:bg-primary-700 text-white
+                           font-semibold rounded-md py-2.5 text-sm transition-colors"
+                      >
+                        Đăng nhập
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Container from "../components/ui/Container";
-import { register, verifyRegisterOtp } from "../services/authService";
+import {
+  register,
+  resendRegisterOtp,
+  verifyRegisterOtp,
+} from "../services/authService";
 import { toE164VietnamesePhone } from "../lib/validators";
 
 const OTP_LENGTH = 6;
@@ -114,31 +118,22 @@ export default function VerifyOtpPage() {
     }
   };
 
-  //   const handleResend = async () => {
-  //     if (resendCooldown > 0 || resending) return;
-  //     if (!fullName || !phone) {
-  //       setError("Không thể gửi lại OTP, vui lòng quay lại đăng ký từ đầu");
-  //       return;
-  //     }
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resending) return;
 
-  //     setResending(true);
-  //     setError(null);
-  //     try {
-  //       await register({
-  //         fullName,
-  //         phone: toE164VietnamesePhone(phone),
-  //         email,
-  //         password,
-  //       });
-  //       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-  //       setOtpDigits(Array(OTP_LENGTH).fill(""));
-  //       inputRefs.current[0]?.focus();
-  //     } catch (err) {
-  //       setError(err instanceof Error ? err.message : "Gửi lại OTP thất bại");
-  //     } finally {
-  //       setResending(false);
-  //     }
-  //   };
+    setResending(true);
+    setError(null);
+    try {
+      await resendRegisterOtp(email);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      setOtpDigits(Array(OTP_LENGTH).fill(""));
+      inputRefs.current[0]?.focus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gửi lại OTP thất bại");
+    } finally {
+      setResending(false);
+    }
+  };
 
   return (
     <Container>
@@ -197,7 +192,7 @@ export default function VerifyOtpPage() {
             ) : (
               <button
                 type="button"
-                // onClick={handleResend}
+                onClick={handleResend}
                 disabled={resending}
                 className="text-primary-500 underline disabled:opacity-60"
               >

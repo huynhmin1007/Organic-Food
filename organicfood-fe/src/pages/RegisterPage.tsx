@@ -224,6 +224,26 @@ export default function RegisterPage() {
           >
             {submitting ? "Đang đăng ký..." : "Đăng ký"}
           </button>
+
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#DB4437] hover:bg-[#c53c30]
+                         text-white rounded-md py-2.5 text-sm font-semibold transition-colors"
+            >
+              <span className="font-bold">G+</span>
+              Đăng ký Google
+            </button>
+
+            <button
+              type="button"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#3B5998] hover:bg-[#334d84]
+                         text-white rounded-md py-2.5 text-sm font-semibold transition-colors"
+            >
+              <span className="font-bold">f</span>
+              Đăng ký Facebook
+            </button>
+          </div>
         </form>
       </div>
     </Container>

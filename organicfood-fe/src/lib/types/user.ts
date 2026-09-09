@@ -11,8 +11,9 @@ export type AuthenticationResponse = {
 };
 
 export type UserAddress = {
+  id: number;
   address: string;
-  isDefault: boolean;
+  default: boolean;
 };
 
 export type UserInfo = {
@@ -35,7 +36,7 @@ export type VerifyOtpPayload = {
   otp: string;
 };
 
-export type UserAddressRequest = {
+export type AddUserAddressRequest = {
   address: string;
-  isDefault: boolean;
+  isDefault?: boolean;
 };

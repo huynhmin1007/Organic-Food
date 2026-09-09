@@ -1,29 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useCartDetails } from "../hooks/useCartDetails";
 import { useAddress } from "../hooks/useAddress";
-import { isValidVietnamesePhone } from "../lib/validators";
+import {
+  isValidVietnamesePhone,
+  toE164VietnamesePhone,
+} from "../lib/validators";
+import PaymentModal from "../components/layout/PaymentModal";
+import type { OrderResponse, PlaceOrderPayload } from "../lib/types/order";
+import { useCart } from "../contexts/CartContext";
+import { addUserAddress } from "../services/userService";
+import {
+  findProvinceByName,
+  findWardByName,
+  parseAddressString,
+} from "../lib/addressParser";
 
 type FieldErrors = {
   fullName?: string;
   phone?: string;
   address?: string;
   province?: string;
-  district?: string;
   ward?: string;
 };
 
 const SUGGESTED_VOUCHERS = [
-  // "Giảm 50,000đ",
-  // "Giảm 70,000đ",
-  // "Giảm 100,000đ",
-  // "Giảm 30,000đ",
+  "Giảm 50,000đ",
+  "Giảm 70,000đ",
+  "Giảm 100,000đ",
+  "Giảm 30,000đ",
 ];
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const { items: rawItems, clearCart } = useCart();
   const { items, totalPrice, loading } = useCartDetails();
   const { user, logout } = useAuth();
   const {
@@ -39,17 +51,74 @@ export default function CheckoutPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [orderPayload, setOrderPayload] = useState<PlaceOrderPayload | null>(
+    null,
+  );
+  const [savingAddress, setSavingAddress] = useState(false);
+
+  // Ward cần auto-chọn sau khi wards của tỉnh tương ứng load xong (vì fetch bất đồng bộ)
+  const [pendingWardName, setPendingWardName] = useState<string | null>(null);
+
+  const applyParsedAddress = (fullAddress: string) => {
+    const parsed = parseAddressString(fullAddress);
+    setAddress(parsed.street);
+
+    if (parsed.provinceName && provinces.length > 0) {
+      const matchedProvince = findProvinceByName(
+        provinces,
+        parsed.provinceName,
+      );
+      if (matchedProvince) {
+        setProvinceCode(matchedProvince.code);
+        setPendingWardName(parsed.wardName);
+        return;
+      }
+    }
+
+    // Không khớp được tỉnh -> để trống, người dùng tự chọn lại
+    setProvinceCode(null);
+  };
+
+  // Khi wards load xong (sau khi provinceCode đổi) và đang có pendingWardName -> tự chọn ward khớp
+  useEffect(() => {
+    if (!pendingWardName || wards.length === 0) return;
+
+    const matchedWard = findWardByName(wards, pendingWardName);
+    if (matchedWard) {
+      setWardCode(matchedWard.code);
+    }
+    setPendingWardName(null);
+  }, [wards, pendingWardName, setWardCode]);
+
+  // Prefill họ tên / SĐT / địa chỉ mặc định khi có thông tin user (chỉ chạy khi provinces đã load xong)
+  useEffect(() => {
+    if (!user || provinces.length === 0) return;
+
+    setFullName((prev) => prev || user.fullName);
+    setPhone((prev) => prev || user.phone.replace("+84", "0"));
+
+    const defaultIndex = user.addresses.findIndex((a) => a.default);
+    if (defaultIndex !== -1) {
+      setAddressMode(defaultIndex);
+      applyParsedAddress(user.addresses[defaultIndex].address);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, provinces]);
 
   const handleSelectSavedAddress = (value: string) => {
     if (value === "new") {
       setAddressMode("new");
+      setAddress("");
+      setProvinceCode(null);
       return;
     }
     const idx = Number(value);
     setAddressMode(idx);
-    setAddress(user?.addresses[idx]?.address ?? "");
+    const saved = user?.addresses[idx];
+    if (saved) applyParsedAddress(saved.address);
   };
 
   const validate = (): boolean => {
@@ -71,10 +140,42 @@ export default function CheckoutPage() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleContinue = () => {
+  const handlePlaceOrder = async () => {
     if (!validate()) return;
+    if (rawItems.length === 0) return;
 
-    navigate("/checkout/method");
+    const provinceName =
+      provinces.find((p) => p.code === provinceCode)?.name ?? "";
+    const wardName = wards.find((w) => w.code === wardCode)?.name ?? "";
+    const fullAddress = [address.trim(), wardName, provinceName]
+      .filter(Boolean)
+      .join(", ");
+
+    if (saveAsDefault && addressMode === "new") {
+      setSavingAddress(true);
+      try {
+        await addUserAddress({ address: fullAddress, isDefault: true });
+      } catch (err) {
+        console.error("Lưu địa chỉ mặc định thất bại:", err);
+      } finally {
+        setSavingAddress(false);
+      }
+    }
+
+    setOrderPayload({
+      idempotencyKey: crypto.randomUUID(),
+      phone: toE164VietnamesePhone(phone.trim()),
+      address: fullAddress,
+      items: rawItems.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+      })),
+    });
+  };
+
+  const handlePaymentSuccess = (order: OrderResponse) => {
+    clearCart();
+    navigate("/don-hang-thanh-cong", { state: { order } });
   };
 
   return (
@@ -85,15 +186,13 @@ export default function CheckoutPage() {
         </Link>
 
         <div className="flex items-center gap-2 text-sm mt-3 text-neutral-500">
-          <Link to="/cart" className="text-primary-600">
+          <Link to="/thanh-toan" className="text-primary-600">
             Giỏ hàng
           </Link>
           <span>›</span>
           <span className="font-semibold text-neutral-800">
             Thông tin giao hàng
           </span>
-          <span>›</span>
-          <span>Phương thức thanh toán</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 mt-6">
@@ -118,22 +217,6 @@ export default function CheckoutPage() {
                   </button>
                 </div>
               </div>
-            )}
-
-            {user && user.addresses.length > 0 && (
-              <select
-                value={addressMode}
-                onChange={(e) => handleSelectSavedAddress(e.target.value)}
-                className="w-full border border-neutral-300 rounded-md px-3 py-2.5 mb-3 outline-none"
-              >
-                <option value="new">Thêm địa chỉ mới...</option>
-                {user.addresses.map((addr, idx) => (
-                  <option key={idx} value={idx}>
-                    {addr.address}
-                    {addr.isDefault ? " (Mặc định)" : ""}
-                  </option>
-                ))}
-              </select>
             )}
 
             <div className="space-y-3">
@@ -235,38 +318,64 @@ export default function CheckoutPage() {
                   )}
                 </div>
               </div>
+
+              {/* Thanh chọn địa chỉ đã lưu — đặt cuối cùng trong nhóm input */}
+              {user && user.addresses.length > 0 && (
+                <select
+                  value={addressMode}
+                  onChange={(e) => handleSelectSavedAddress(e.target.value)}
+                  className="w-full border border-neutral-300 rounded-md px-3 py-2.5 outline-none text-neutral-500"
+                >
+                  <option value="new">Thêm địa chỉ mới...</option>
+                  {user.addresses.map((addr, idx) => (
+                    <option key={addr.id} value={idx}>
+                      {addr.address}
+                      {addr.default ? " (Mặc định)" : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {addressMode === "new" && (
+                <label className="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={saveAsDefault}
+                    onChange={(e) => setSaveAsDefault(e.target.checked)}
+                    className="w-4 h-4 accent-primary-500"
+                  />
+                  Đặt làm địa chỉ mặc định
+                </label>
+              )}
             </div>
 
             <div className="flex items-center justify-between mt-6">
               <Link
-                to="/cart"
+                to="/thanh-toan"
                 className="text-primary-600 text-sm hover:underline"
               >
                 Giỏ hàng
               </Link>
 
               <button
-                onClick={handleContinue}
-                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold
-                           px-6 py-2.5 rounded-md transition-colors"
+                onClick={handlePlaceOrder}
+                disabled={items.length === 0 || savingAddress}
+                className="bg-primary-600 hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed
+                           text-white font-semibold px-6 py-2.5 rounded-md transition-colors"
               >
-                Tiếp tục đến phương thức thanh toán
+                {savingAddress ? "Đang lưu địa chỉ..." : "Đặt hàng"}
               </button>
             </div>
           </div>
 
-          {/* Bên phải: tóm tắt đơn hàng */}
+          {/* Bên phải: tóm tắt đơn hàng — giữ nguyên như bản trước */}
           <div className="bg-white rounded-lg shadow-sm p-4 h-fit">
             {loading ? (
               <p className="text-center text-sm text-neutral-400 py-8">
                 Đang tải giỏ hàng...
               </p>
             ) : (
-              <div
-                className="max-h-80 overflow-y-auto divide-y divide-neutral-100
-                           [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent
-                           [&::-webkit-scrollbar-thumb]:bg-neutral-300 [&::-webkit-scrollbar-thumb]:rounded-full"
-              >
+              <div className="max-h-80 overflow-y-auto divide-y divide-neutral-100 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-neutral-300 [&::-webkit-scrollbar-thumb]:rounded-full">
                 {items.map((item) => (
                   <div
                     key={item.productId}
@@ -282,7 +391,6 @@ export default function CheckoutPage() {
                         {item.quantity}
                       </span>
                     </div>
-
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-neutral-700 line-clamp-2">
                         {item.name}
@@ -293,7 +401,6 @@ export default function CheckoutPage() {
                         </p>
                       )}
                     </div>
-
                     <div className="text-right shrink-0">
                       <p className="text-sm font-medium">
                         {item.pricing.lineFinalTotal.toLocaleString("vi-VN")}đ
@@ -321,8 +428,7 @@ export default function CheckoutPage() {
               />
               <button
                 disabled={!voucherCode.trim()}
-                className="bg-neutral-200 text-neutral-500 disabled:opacity-60 rounded-md px-4 text-sm font-medium
-                           hover:bg-neutral-300 transition-colors"
+                className="bg-neutral-200 text-neutral-500 disabled:opacity-60 rounded-md px-4 text-sm font-medium hover:bg-neutral-300 transition-colors"
               >
                 Sử dụng
               </button>
@@ -337,8 +443,7 @@ export default function CheckoutPage() {
                 <button
                   key={label}
                   onClick={() => setVoucherCode(label)}
-                  className="border border-primary-300 text-primary-600 text-xs font-medium
-                             px-3 py-1.5 rounded-md hover:bg-primary-50 transition-colors"
+                  className="border border-primary-300 text-primary-600 text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary-50 transition-colors"
                 >
                   {label}
                 </button>
@@ -368,6 +473,15 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {orderPayload && (
+        <PaymentModal
+          payload={orderPayload}
+          totalAmount={totalPrice}
+          onClose={() => setOrderPayload(null)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }
