@@ -1,5 +1,13 @@
 package com.minn.organicfood;
 
+import com.minn.organicfood.identity.repository.AccountRepository;
+import com.minn.organicfood.identity.repository.PermissionRepository;
+import com.minn.organicfood.identity.repository.RoleRepository;
+import com.minn.organicfood.ordering.repository.OrderItemRepository;
+import com.minn.organicfood.ordering.repository.OrderRepository;
+import com.minn.organicfood.profile.repository.UserAddressRepository;
+import com.minn.organicfood.profile.repository.UserProfileRepository;
+import com.minn.organicfood.shipping.repository.ShipmentRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +28,6 @@ public class DataInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("=== Starting data initialization ===");
-
         identityDataInitializer.init();
         notificationDataInitializer.init();
 
