@@ -45,6 +45,8 @@ app:
 
   security:
     public-endpoints:
+      - method: GET
+        pattern: /connect
       - method: POST
         pattern: /auth/login
       - method: POST
