@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 const CONNECT_CHECK_URL =
-  (import.meta.env.VITE_API_URL ?? "http://localhost:8081/organicfood/api/v1") +
-  "/connect";
+  (import.meta.env.VITE_API_BASE_URL ??
+    "http://localhost:8081/organicfood/api/v1") + "/connect";
 
 const POLL_INTERVAL_MS = 3000;
 const SHOW_OVERLAY_DELAY_MS = 1500;
