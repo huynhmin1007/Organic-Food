@@ -4,8 +4,8 @@ import { tokenStorage } from "./tokenStorage";
 const axiosClient = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL ??
-    // "http://localhost:8081/organicfood/api/v1",
-    "https://organic-food-mpj2.onrender.com/organicfood/api/v1",
+    import.meta.env.VITE_API_URL ??
+    "http://localhost:8081/organicfood/api/v1",
   headers: { "Content-Type": "application/json" },
   timeout: 15000,
   paramsSerializer: {
