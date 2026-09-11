@@ -34,8 +34,6 @@ An **e-commerce platform for organic, fresh food**, built with a decoupled Front
 
 </div>
 
-> 💡 **Tip for a "sliding" demo effect:** plain GitHub Markdown doesn't support a real carousel, but you can get a similar effect with a **screen-recorded GIF** walking through the app (tools like [ScreenToGif](https://www.screentogif.com/) or [LICEcap](https://www.cockos.com/licecap/)) — it auto-plays on page load and reads far better to a recruiter than a row of static images.
-
 ---
 
 ## 📖 About The Project
