@@ -4,6 +4,8 @@
 
 An **e-commerce platform for organic, fresh food**, built with a decoupled Frontend–Backend architecture, supporting the full business flow from browsing products and promotions to cart management, checkout, and user authentication.
 
+> ⚠️ **Note:** the backend runs on Render's **free tier**, which spins down after 15 minutes of inactivity — the **first request** may take **30–60 seconds** to respond while the server wakes up. This is expected, not a bug. Please be patient on the first load.
+
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=for-the-badge)](https://organic-food-mauve.vercel.app/)
 [![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0-brightgreen?style=for-the-badge&logo=springboot)](https://spring.io/projects/spring-boot)
@@ -17,21 +19,22 @@ An **e-commerce platform for organic, fresh food**, built with a decoupled Front
 
 ## 📸 Demo Screenshots
 
+<!--
+  Replace the image paths below with your actual screenshots.
+  Capture the main pages (Home, Product List, Product Detail, Cart,
+  Login/Register...), save them under /docs/screenshots in the repo,
+  and update the paths accordingly.
+-->
+
 <div align="center">
 
-|              Home Page               |                 Product List                 |
-| :----------------------------------: | :------------------------------------------: |
+| Home Page | Product List |
+|:---:|:---:|
 | ![Home](./docs/screenshots/home.png) | ![Products](./docs/screenshots/products.png) |
 
-|                      Product Detail                      |                 Cart                 |
-| :------------------------------------------------------: | :----------------------------------: |
-| ![Product Detail](./docs/screenshots/product-detail.png) | ![Cart](./docs/screenshots/cart.png) |
-
-|                 Login                  |                Account Page                |
-| :------------------------------------: | :----------------------------------------: |
-| ![Login](./docs/screenshots/login.png) | ![Account](./docs/screenshots/account.png) |
-
 </div>
+
+> 💡 **Tip for a "sliding" demo effect:** plain GitHub Markdown doesn't support a real carousel, but you can get a similar effect with a **screen-recorded GIF** walking through the app (tools like [ScreenToGif](https://www.screentogif.com/) or [LICEcap](https://www.cockos.com/licecap/)) — it auto-plays on page load and reads far better to a recruiter than a row of static images.
 
 ---
 
@@ -40,7 +43,6 @@ An **e-commerce platform for organic, fresh food**, built with a decoupled Front
 **OrganicFood** is a full-stack e-commerce web application simulating an online organic food store, built to practice and showcase industry-standard full-stack development: a clean layered architecture, JWT/OAuth2-based security, performance optimization via caching, and a complete cloud deployment pipeline.
 
 The project covers the core business flows of a food retail platform:
-
 - Managing categories, brands, products, and promotions (percentage-based, time-limited discounts)
 - Secure user authentication and account management (OTP-verified registration, login, token refresh)
 - A smooth shopping experience: search, filter, view product details, cart, and checkout
@@ -48,39 +50,45 @@ The project covers the core business flows of a food retail platform:
 
 ---
 
+## 🌐 Live Demo
+
+| | |
+|---|---|
+| 🔗 **Frontend URL** | [https://organic-food-mauve.vercel.app/](https://organic-food-mauve.vercel.app/) |
+| 📘 **API Docs (Swagger)** | `<BACKEND_URL>/organicfood/api/v1/swagger-ui.html` |
+
+---
+
 ## 🛠️ Tech Stack
 
 ### Backend
-
-| Component            | Technology                                         |
-| -------------------- | -------------------------------------------------- |
-| Language / Framework | Java 21, Spring Boot                               |
-| Security             | Spring Security, JWT (RSA), OAuth2 Resource Server |
-| Database             | PostgreSQL                                         |
-| Migration management | Flyway                                             |
-| Cache / Session      | Redis                                              |
-| Object mapping       | MapStruct                                          |
-| API documentation    | SpringDoc OpenAPI (Swagger UI)                     |
-| Image storage        | Cloudinary                                         |
-| Email delivery       | Brevo API                                          |
-| Modular architecture | Spring Modulith                                    |
+| Component | Technology |
+|---|---|
+| Language / Framework | Java 21, Spring Boot |
+| Security | Spring Security, JWT (RSA), OAuth2 Resource Server |
+| Database | PostgreSQL |
+| Migration management | Flyway |
+| Cache / Session | Redis |
+| Object mapping | MapStruct |
+| API documentation | SpringDoc OpenAPI (Swagger UI) |
+| Image storage | Cloudinary |
+| Email delivery | Brevo API |
+| Modular architecture | Spring Modulith |
 
 ### Frontend
-
-| Component  | Technology         |
-| ---------- | ------------------ |
+| Component | Technology |
+|---|---|
 | UI library | React (TypeScript) |
-| Styling    | Tailwind CSS       |
-| Build tool | Vite               |
+| Styling | Tailwind CSS |
+| Build tool | Vite |
 
 ### Infrastructure & Deployment
-
-| Component        | Technology                                          |
-| ---------------- | --------------------------------------------------- |
-| Containerization | Docker, Docker Compose                              |
-| Backend hosting  | Render (Web Service + PostgreSQL + Key Value/Redis) |
-| Frontend hosting | Vercel                                              |
-| Source control   | Git (monorepo — FE & BE combined)                   |
+| Component | Technology |
+|---|---|
+| Containerization | Docker, Docker Compose |
+| Backend hosting | Render (Web Service + PostgreSQL + Key Value/Redis) |
+| Frontend hosting | Vercel |
+| Source control | Git (monorepo — FE & BE combined) |
 
 ---
 
@@ -94,22 +102,6 @@ The project covers the core business flows of a food retail platform:
 - 🖼️ **Image Management**: product image upload and optimization via Cloudinary
 - 📧 **Email Notifications**: automated verification and notification emails via Brevo
 - 📑 **API Documentation**: auto-generated, interactive API docs via Swagger UI
-
----
-
-## 🌐 Live Demo
-
-|                           |                                                                                  |
-| ------------------------- | -------------------------------------------------------------------------------- |
-| 🔗 **Frontend URL**       | [https://organic-food-mauve.vercel.app/](https://organic-food-mauve.vercel.app/) |
-| 📘 **API Docs (Swagger)** | `<BACKEND_URL>/organicfood/api/v1/swagger-ui.html`                               |
-
-> ⚠️ **Important note when viewing the demo:**
-> The backend is hosted on Render's **free tier**, which **automatically spins down after 15 minutes of inactivity** to save resources. As a result:
->
-> - The **first request** after a period of inactivity may take **30–60 seconds** to respond while the server "wakes up" — this is expected behavior, **not a bug**. Please be patient on the first load.
-> - Subsequent requests (within the next 15 minutes) will be fast and responsive as usual.
-> - If you need to review it without delay, feel free to reach out beforehand so the server can be "warmed up" in advance.
 
 ---
 
@@ -146,13 +138,11 @@ docker compose up -d --build
 ```
 
 Once started, the backend will be available at:
-
 ```
 http://localhost:8081/organicfood/api/v1
 ```
 
 API documentation (Swagger UI):
-
 ```
 http://localhost:8081/organicfood/api/v1/swagger-ui.html
 ```
@@ -181,7 +171,6 @@ npm run dev
 ```
 
 By default, the frontend runs at:
-
 ```
 http://localhost:5173
 ```
@@ -228,12 +217,12 @@ organic-food/
 
 ## ☁️ Deployment
 
-| Component     | Platform                     | Notes                                                            |
-| ------------- | ---------------------------- | ---------------------------------------------------------------- |
-| Backend       | [Render](https://render.com) | Web Service (Docker) + PostgreSQL + Key Value (Redis), Free tier |
-| Frontend      | [Vercel](https://vercel.com) | Auto-deploy from `main` branch, Root Directory: `organicfood-fe` |
-| Database      | Render PostgreSQL            | Free tier — demo data seeded manually                            |
-| Image storage | Cloudinary                   | CDN, independent of backend hosting location                     |
+| Component | Platform | Notes |
+|---|---|---|
+| Backend | [Render](https://render.com) | Web Service (Docker) + PostgreSQL + Key Value (Redis), Free tier |
+| Frontend | [Vercel](https://vercel.com) | Auto-deploy from `main` branch, Root Directory: `organicfood-fe` |
+| Database | Render PostgreSQL | Free tier — demo data seeded manually |
+| Image storage | Cloudinary | CDN, independent of backend hosting location |
 
 CI/CD flow: every `git push` to `main` triggers an automatic build & redeploy on both Render and Vercel — no manual steps required.
 
