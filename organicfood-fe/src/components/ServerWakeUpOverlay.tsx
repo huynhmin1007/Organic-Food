@@ -16,7 +16,7 @@ export default function ServerWakeUpOverlay({
           Server đang khởi động...
         </p>
         <p className="text-sm text-neutral-500 text-center mt-2 max-w-sm">
-          Do sử dụng gói miễn phí, server có thể mất khoảng 30-60 giây để khởi
+          Do sử dụng gói miễn phí, server có thể mất khoảng 2-3 phút để khởi
           động sau thời gian không hoạt động. Vui lòng chờ trong giây lát.
         </p>
         <p className="text-xs text-neutral-400 mt-3">
