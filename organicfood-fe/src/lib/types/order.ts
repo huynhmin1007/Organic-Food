@@ -38,5 +38,6 @@ export type OrderResponse = {
   status: OrderStatus;
   totalAmount: number;
   discountAmount: number;
+  createdAt: string;
   items: OrderItemResponse[];
 };

@@ -4,11 +4,10 @@ import { tokenStorage } from "./tokenStorage";
 const axiosClient = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL ??
-    "http://localhost:8081/organicfood/api/v1",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
+    // "http://localhost:8081/organicfood/api/v1",
+    "https://organic-food-mpj2.onrender.com/organicfood/api/v1",
+  headers: { "Content-Type": "application/json" },
+  timeout: 15000,
   paramsSerializer: {
     serialize: (params) => {
       const searchParams = new URLSearchParams();
@@ -25,7 +24,6 @@ const axiosClient = axios.create({
   },
 });
 
-// Gắn access token vào mọi request (nếu có)
 axiosClient.interceptors.request.use((config) => {
   const token = tokenStorage.getAccessToken();
   if (token) {
@@ -34,13 +32,18 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// AuthContext đăng ký callback này để biết khi nào cần logout (refresh thất bại hẳn)
 let onAuthFailure: (() => void) | null = null;
 export function setOnAuthFailure(callback: () => void) {
   onAuthFailure = callback;
 }
 
-// Nếu nhiều request cùng 401 cùng lúc, chỉ gọi refresh 1 lần, các request còn lại xếp hàng chờ
+// AuthContext đăng ký để biết mỗi khi token vừa được refresh (chủ động hoặc bị động),
+// dùng để đặt lại hẹn giờ refresh tiếp theo
+let onTokenRefreshed: ((expiresIn: number) => void) | null = null;
+export function setOnTokenRefreshed(callback: (expiresIn: number) => void) {
+  onTokenRefreshed = callback;
+}
+
 let isRefreshing = false;
 let pendingQueue: {
   resolve: (token: string) => void;
@@ -55,12 +58,59 @@ function processQueue(error: unknown, token: string | null) {
   pendingQueue = [];
 }
 
+/** Hàm refresh dùng chung — cả interceptor (khi gặp 401) lẫn timer chủ động đều gọi hàm này */
+export async function performTokenRefresh(): Promise<string> {
+  const refreshTokenValue = tokenStorage.getRefreshToken();
+  if (!refreshTokenValue) throw new Error("Không có refresh token");
+
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      pendingQueue.push({ resolve, reject });
+    });
+  }
+
+  isRefreshing = true;
+  try {
+    const { data } = await axiosClient.post<{
+      data: { accessToken: string; refreshToken: string; expiresIn: number };
+    }>("/auth/token/refresh", { refreshToken: refreshTokenValue });
+
+    const { accessToken, refreshToken: newRefreshToken, expiresIn } = data.data;
+    tokenStorage.setTokens(accessToken, newRefreshToken, expiresIn);
+    onTokenRefreshed?.(expiresIn);
+
+    processQueue(null, accessToken);
+    return accessToken;
+  } catch (err) {
+    processQueue(err, null);
+    tokenStorage.clearTokens();
+    onAuthFailure?.();
+    throw err;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | (InternalAxiosRequestConfig & {
+          _retry?: boolean;
+          _retryCount?: number;
+        })
       | undefined;
+
+    const isTimeoutOrNetworkError = !error.response;
+    if (
+      isTimeoutOrNetworkError &&
+      originalRequest &&
+      (originalRequest._retryCount ?? 0) < 1
+    ) {
+      originalRequest._retryCount = (originalRequest._retryCount ?? 0) + 1;
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // chờ 1s trước khi thử lại
+      return axiosClient(originalRequest);
+    }
 
     const isRefreshEndpoint = originalRequest?.url?.includes(
       "/auth/token/refresh",
@@ -74,49 +124,14 @@ axiosClient.interceptors.response.use(
       !isRefreshEndpoint &&
       !isLoginEndpoint
     ) {
-      const refreshTokenValue = tokenStorage.getRefreshToken();
-
-      if (!refreshTokenValue) {
-        tokenStorage.clearTokens();
-        onAuthFailure?.();
-        return Promise.reject(new Error("Phiên đăng nhập đã hết hạn"));
-      }
-
-      if (isRefreshing) {
-        // Đã có request khác đang refresh -> chờ, dùng token mới khi xong
-        return new Promise((resolve, reject) => {
-          pendingQueue.push({
-            resolve: (token: string) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              resolve(axiosClient(originalRequest));
-            },
-            reject,
-          });
-        });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        const { data } = await axiosClient.post<{
-          data: { accessToken: string; refreshToken: string };
-        }>("/auth/token/refresh", { refreshToken: refreshTokenValue });
-
-        const { accessToken, refreshToken: newRefreshToken } = data.data;
-        tokenStorage.setTokens(accessToken, newRefreshToken);
-
-        processQueue(null, accessToken);
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        const newAccessToken = await performTokenRefresh();
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosClient(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        tokenStorage.clearTokens();
-        onAuthFailure?.();
+      } catch {
         return Promise.reject(new Error("Phiên đăng nhập đã hết hạn"));
-      } finally {
-        isRefreshing = false;
       }
     }
 

@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import MainLayout from "./layouts/MainLayout";
 import HomePage from "./pages/HomePage";
@@ -12,37 +12,54 @@ import RegisterPage from "./pages/RegisterPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSuccessPage from "./pages/OrderSuccessPage";
-import InfoPage from "./pages/InfoPage";
+import AccountLayout from "./layouts/AccountLayout";
+import AccountProfilePage from "./pages/AccountProfilePage";
+import OrderListPage from "./pages/OrderListPage";
+import RequireAuth from "./components/RequireAuth";
+import AddressPage from "./pages/AddressPage";
+import ServerWakeUpOverlay from "./components/ServerWakeUpOverlay";
 
 function App() {
   return (
-    <AuthProvider>
-      <CategoryProvider>
-        <CartProvider>
-          <Routes>
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route
-              path="/order/place-order-successful"
-              element={<OrderSuccessPage />}
-            />
-
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<HomePage />} />
+    <ServerWakeUpOverlay>
+      <AuthProvider>
+        <CategoryProvider>
+          <CartProvider>
+            <Routes>
+              <Route path="/checkout" element={<CheckoutPage />} />
               <Route
-                path="/:category/:productSlug"
-                element={<ProductDetailPage />}
+                path="/order/place-order-successful"
+                element={<OrderSuccessPage />}
               />
-              <Route path="/tim-kiem" element={<ProductListPage />} />
-              <Route path="/:category" element={<ProductListPage />} />
-              <Route path="/account/login" element={<LoginPage />} />
-              <Route path="/account/register" element={<RegisterPage />} />
-              <Route path="/account/verify-otp" element={<VerifyOtpPage />} />
-              <Route path="/account/info" element={<InfoPage />} />
-            </Route>
-          </Routes>
-        </CartProvider>
-      </CategoryProvider>
-    </AuthProvider>
+
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<HomePage />} />
+
+                <Route path="/account/login" element={<LoginPage />} />
+                <Route path="/account/register" element={<RegisterPage />} />
+                <Route path="/account/verify-otp" element={<VerifyOtpPage />} />
+
+                <Route element={<RequireAuth />}>
+                  <Route path="/account" element={<AccountLayout />}>
+                    <Route index element={<Navigate to="profile" replace />} />
+                    <Route path="profile" element={<AccountProfilePage />} />
+                    <Route path="orders" element={<OrderListPage />} />
+                    <Route path="address" element={<AddressPage />} />
+                  </Route>
+                </Route>
+
+                <Route
+                  path="/:category/:productSlug"
+                  element={<ProductDetailPage />}
+                />
+                <Route path="/tim-kiem" element={<ProductListPage />} />
+                <Route path="/:category" element={<ProductListPage />} />
+              </Route>
+            </Routes>
+          </CartProvider>
+        </CategoryProvider>
+      </AuthProvider>
+    </ServerWakeUpOverlay>
   );
 }
 

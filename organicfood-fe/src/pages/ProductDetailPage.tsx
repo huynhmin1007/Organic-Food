@@ -44,18 +44,7 @@ export default function ProductDetailPage() {
   };
 
   const handleAddToCart = () => {
-    addItem(
-      {
-        productId: product.id,
-        name: product.name,
-        slug: product.slug,
-        categorySlug: category,
-        thumbnailUrl: product.images[0] ?? "",
-        unitPrice: discountInfo.sellingPrice,
-        packDetail: product.packDetail,
-      },
-      quantity,
-    );
+    addItem(product.id, quantity);
     setShowToast(true);
   };
 

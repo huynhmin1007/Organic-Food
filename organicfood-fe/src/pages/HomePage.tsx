@@ -24,10 +24,10 @@ export default function HomePage() {
         />
       </Section>
 
-      <Section title="Rau Củ Quả Organic">
+      <Section title="Thịt, cá sạch chất lượng cao">
         <ProductGrid
           filter={{
-            categorySlugs: ["rau-cu-trai-cay"],
+            categorySlugs: ["thit-ca-trung-rau-cu"],
             includeDescendants: true,
           }}
           columns={5}
