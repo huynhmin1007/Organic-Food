@@ -4,7 +4,7 @@
 
 An **e-commerce platform for organic, fresh food**, built with a decoupled Frontend–Backend architecture, supporting the full business flow from browsing products and promotions to cart management, checkout, and user authentication.
 
-> ⚠️ **Note:** the backend runs on Render's **free tier**, which spins down after 15 minutes of inactivity — the **first request** may take **30–60 seconds** to respond while the server wakes up. This is expected, not a bug. Please be patient on the first load.
+> ⚠️ **Note:** the backend runs on Render's **free tier**, which spins down after 15 minutes of inactivity — the **first request** may take **2-3 minutes** to respond while the server wakes up. This is expected, not a bug. Please be patient on the first load.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=for-the-badge)](https://organic-food-mauve.vercel.app/)
 [![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)](https://openjdk.org/)
