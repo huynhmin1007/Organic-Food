@@ -11,3 +11,9 @@ export async function placeOrder(
   );
   return data.data;
 }
+
+export async function getOrders(): Promise<OrderResponse[]> {
+  const { data } =
+    await axiosClient.get<ApiResponse<OrderResponse[]>>("/orders");
+  return data.data;
+}

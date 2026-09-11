@@ -112,7 +112,7 @@ export default function Header() {
                   </div>
                 ) : (
                   <div>
-                    <Link to="/account/info">
+                    <Link to="/account/profile">
                       <p className="">{user?.fullName}</p>
                     </Link>
                     <button

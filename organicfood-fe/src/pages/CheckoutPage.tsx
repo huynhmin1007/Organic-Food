@@ -175,7 +175,7 @@ export default function CheckoutPage() {
 
   const handlePaymentSuccess = (order: OrderResponse) => {
     clearCart();
-    navigate("/don-hang-thanh-cong", { state: { order } });
+    navigate("/order/place-order-successful", { state: { order } });
   };
 
   return (
