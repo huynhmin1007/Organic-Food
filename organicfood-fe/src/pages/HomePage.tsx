@@ -69,7 +69,7 @@ export default function HomePage() {
 
       <Section
         title="Hàng Organic Mới Về"
-        to="/products?categorySlug=thit-ca-trung-rau-cu"
+        to="/products?categorySlug=rau-cu-trai-cay"
       >
         <ProductCarousel
           filter={{
@@ -79,7 +79,10 @@ export default function HomePage() {
           }}
         />
         <div className="w-full flex items-center justify-center mt-4">
-          <Button to={`/products/${"rau-cu-trai-cay"}`} variant={"outline"}>
+          <Button
+            to={`/products?categorySlug=rau-cu-trai-cay`}
+            variant={"outline"}
+          >
             Xem thêm
             <ChevronRight size={16} />
           </Button>
@@ -87,7 +90,7 @@ export default function HomePage() {
       </Section>
 
       <Section
-        title="Hàng Organic Mới Về"
+        title="Hôm nay ăn gì?"
         to="/products?categorySlug=thit-ca-trung-rau-cu"
       >
         <ProductGrid
@@ -101,7 +104,7 @@ export default function HomePage() {
         />
         <div className="w-full flex items-center justify-center mt-4">
           <Button
-            to={`/products/${"thit-ca-trung-rau-cu"}`}
+            to={`/products?categorySlug=thit-ca-trung-rau-cu`}
             variant={"outline"}
           >
             Xem thêm
