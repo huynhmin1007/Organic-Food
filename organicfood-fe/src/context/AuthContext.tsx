@@ -24,7 +24,7 @@ interface AuthContextValue {
   isInitializing: boolean; // true trong lúc đang thử silent-login lúc app khởi động
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  refreshUser: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+
+  // Ref giữ token "hiện hành": có hiệu lực ngay lập tức, không phải chờ React render lại.
+  // Axios interceptor đọc token từ đây.
+  const accessTokenRef = useRef<string | null>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAttemptedSilentLogin = useRef(false);
 
@@ -50,13 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function applyAuthResponse(res: AuthenticationResponse) {
     setLoggedOut(false);
+    accessTokenRef.current = res.accessToken; // có hiệu lực ngay, trước khi gọi API
     setAccessToken(res.accessToken);
     scheduleProactiveRefresh(res.expiresIn);
 
     try {
-      const profile = await getUserInfo();
-      console.log(profile);
-      setUser(profile);
+      setUser(await getUserInfo());
     } catch {
       setUser(null);
     }
@@ -65,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function doRefresh() {
     try {
       const res = await refreshTokenApi();
-      applyAuthResponse(res);
+      await applyAuthResponse(res);
     } catch {
       // Refresh token cũng hết hạn/không hợp lệ → thực sự phải đăng nhập lại
       logout();
@@ -74,10 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     const res = await loginApi(email, password);
-    applyAuthResponse(res);
+    await applyAuthResponse(res); // đợi có user rồi mới trả về cho LoginPage
   }
 
   function logout() {
+    accessTokenRef.current = null;
     setLoggedOut(true);
     setAccessToken(null);
     setUser(null);
@@ -102,15 +106,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsInitializing(false));
   }, []);
 
-  // Kết nối AuthContext với axios interceptor — chạy lại mỗi khi accessToken đổi
-  // để interceptor luôn đọc đúng giá trị mới nhất.
+  // Kết nối AuthContext với axios interceptor. Chỉ cần đăng ký 1 lần vì
+  // getAccessToken đọc từ ref nên luôn ra giá trị mới nhất.
   useEffect(() => {
     registerAuthHandlers({
-      getAccessToken: () => accessToken,
+      getAccessToken: () => accessTokenRef.current,
       onUnauthorized: logout,
       refreshToken: refreshTokenApi,
     });
-  }, [accessToken]);
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -129,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {

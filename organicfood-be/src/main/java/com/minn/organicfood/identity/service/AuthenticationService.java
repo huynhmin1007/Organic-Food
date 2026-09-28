@@ -254,10 +254,10 @@ public class AuthenticationService {
                 throw BusinessException.of(INVALID_TOKEN);
             }
 
-            boolean isBlacklisted = redisService.exists(BLACKLIST_PREFIX + claims.getJWTID());
-            if (isBlacklisted) {
-                throw BusinessException.of(TOKEN_REVOKED);
-            }
+//            boolean isBlacklisted = redisService.exists(BLACKLIST_PREFIX + claims.getJWTID());
+//            if (isBlacklisted) {
+//                throw BusinessException.of(TOKEN_REVOKED);
+//            }
 
             String jti = claims.getJWTID();
             Date expirationTime = claims.getExpirationTime();

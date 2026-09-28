@@ -16,17 +16,8 @@ export const TEST_ACCOUNT = {
 };
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const { openModal, closeModal } = useModal();
-
-  useEffect(() => {
-    if (isAuthenticated) return;
-    openModal(<TestAccountModal />);
-    return closeModal;
-  }, [isAuthenticated, openModal, closeModal]);
-
-  if (isAuthenticated) return <Navigate to="/" replace />;
-
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +29,11 @@ export default function LoginPage() {
       password: required("Vui lòng nhập mật khẩu"),
     },
   );
+
+  useEffect(() => {
+    openModal(<TestAccountModal />);
+    return closeModal;
+  }, [openModal, closeModal]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
