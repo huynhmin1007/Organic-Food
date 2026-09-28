@@ -262,10 +262,10 @@ public class AuthenticationService {
             String jti = claims.getJWTID();
             Date expirationTime = claims.getExpirationTime();
 
-            long timeToLiveMillis = expirationTime.getTime() - System.currentTimeMillis();
-            if (timeToLiveMillis > 0) {
-                revokeToken(jti, timeToLiveMillis);
-            }
+//            long timeToLiveMillis = expirationTime.getTime() - System.currentTimeMillis();
+//            if (timeToLiveMillis > 0) {
+//                revokeToken(jti, timeToLiveMillis);
+//            }
 
             Account user = accountRepository.findById(UUID.fromString(claims.getSubject()))
                     .orElseThrow(() -> BusinessException.of(ACCOUNT_NOT_FOUND));

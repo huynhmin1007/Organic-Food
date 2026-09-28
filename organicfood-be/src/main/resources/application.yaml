@@ -57,6 +57,8 @@ app:
         pattern: /auth/register/resend-otp
       - method: POST
         pattern: /auth/token/refresh
+      - method: POST
+        pattern: /auth/logout
       - method: GET
         pattern: /categories/**
       - method: GET

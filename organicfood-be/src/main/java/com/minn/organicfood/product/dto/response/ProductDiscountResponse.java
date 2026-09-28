@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ProductDiscountResponse(
+public record
+ProductDiscountResponse(
         String discountType,
         String label,
         BigDecimal discountPercent,

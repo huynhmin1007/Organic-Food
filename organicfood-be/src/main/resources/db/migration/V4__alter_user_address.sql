@@ -1,0 +1,1 @@
+ALTER TABLE profile.user_addresses ADD COLUMN created_at TIMESTAMP;

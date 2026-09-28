@@ -1,5 +1,7 @@
 package com.minn.organicfood.profile.service;
 
+import com.minn.organicfood.cart.dto.CartResponse;
+import com.minn.organicfood.cart.service.CartService;
 import com.minn.organicfood.profile.domain.UserAddress;
 import com.minn.organicfood.profile.domain.UserProfile;
 import com.minn.organicfood.profile.dto.request.AddUserAddressRequest;
@@ -23,6 +25,7 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class UserProfileService {
 
+    private final CartService cartService;
     private final UserProfileRepository profileRepository;
     private final UserAddressRepository addressRepository;
     private final UserProfileMapper mapper;
@@ -38,7 +41,10 @@ public class UserProfileService {
         UserProfile profile = profileRepository.findByAccountId(accountId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ACCOUNT_NOT_FOUND));
 
-        return mapper.toResponse(profile);
+        UserInfo info = mapper.toResponse(profile);
+//        info.setCart(cartService.getCart(accountId));
+
+        return info;
     }
 
     @Transactional

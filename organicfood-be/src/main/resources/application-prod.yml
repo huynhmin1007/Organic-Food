@@ -35,3 +35,6 @@ app:
     base-url: https://api.brevo.com/v3/
     sender-email: ${BREVO_SENDER_EMAIL}
     sender-name: Organic Food
+
+  cookie:
+    secure: true

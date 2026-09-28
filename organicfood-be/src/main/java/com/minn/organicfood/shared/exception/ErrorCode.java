@@ -37,7 +37,9 @@ public enum ErrorCode implements BaseErrorCode{
     ADDRESS_NOT_FOUND(5011, "Address not found", HttpStatus.NOT_FOUND),
 
     PRODUCT_NOT_FOUND(6001, "Product not found", HttpStatus.NOT_FOUND),
-    INSUFFICIENT_STOCK(6002, "Insufficient stock", HttpStatus.BAD_REQUEST),;
+    INSUFFICIENT_STOCK(6002, "Insufficient stock", HttpStatus.BAD_REQUEST),
+
+    CART_NOT_EXISTS(7001, "Cart not exists", HttpStatus.NOT_FOUND),;
 
     private int code;
     private String message;

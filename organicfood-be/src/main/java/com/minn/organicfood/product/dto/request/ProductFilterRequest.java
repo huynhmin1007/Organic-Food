@@ -3,14 +3,14 @@ package com.minn.organicfood.product.dto.request;
 import com.minn.organicfood.product.dto.enums.ProductSortType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @Getter
 @Setter
+@ToString
 public class ProductFilterRequest {
 
     @Min(0)

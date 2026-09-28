@@ -21,7 +21,7 @@ import java.util.UUID;
 public class ApiResponse<T> {
 
     @Builder.Default
-    private int code = 2000;
+    private int code = 200;
 
     private String message;
     private T data;
@@ -69,7 +69,7 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> success(String message, T data, Map<String, Object> metaExtra) {
         return ApiResponse.<T>builder()
-                .code(2000)
+                .code(200)
                 .message(message)
                 .data(data)
                 .meta(Metadata.builder()

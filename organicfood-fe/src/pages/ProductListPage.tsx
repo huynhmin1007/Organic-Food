@@ -1,270 +1,194 @@
-import { ChevronLeft } from "lucide-react";
-import { useMemo } from "react";
+import { Link, useLoaderData, useSearchParams } from "react-router-dom";
+import type { PageResponse } from "../types/api";
+import type { Product } from "../types/product";
 import {
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
-import ScrollableCategoryRow from "../components/layout/ScrollableCategoryRow";
+  BadgePercent,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Container from "../components/ui/Container";
-import { useCategory } from "../contexts/CategoryContext";
-import { useBrandList } from "../hooks/useBrand";
-import { filterCategoriesByKeyword, findCategoryPath } from "../lib/category";
-import { parseListParam, toggleListValue } from "../lib/queryParams";
-import type { Category } from "../lib/types/category";
-import type { ProductSortType } from "../lib/types/product";
-import ScrollableBrandRow from "../components/layout/ScrollableBrandRow";
-import { useProductList } from "../hooks/useProduct";
+import { useCategoryContext } from "../context/CategoryContext";
+import { useRef, useState } from "react";
+import clsx from "clsx";
+import CategoryMenuPanel from "../components/CategoryMenuPanel";
+import type {
+  ProductFilter,
+  ProductSortType,
+} from "../services/productService";
+import CategoryFilterTree from "../components/CategoryFilterTree";
+import { findCategoryBySlug, findSimilarCategories } from "../lib/category";
+import ProductCardRow from "../components/ProductCardRow";
+import { ProductCard } from "../components/ProductCard";
 import Pagination from "../components/ui/Pagination";
-import ProductCard from "../features/product/ProductCard";
-import ScrollableProductRow from "../components/layout/ScrollableProductRow";
+import { useBrands } from "../hooks/useBrands";
+import BrandFilterRow from "../components/BrandFilterRow";
 
-const PAGE_SIZE = 20;
+interface ProductListLoaderData {
+  products: PageResponse<Product>;
+  saleProducts: PageResponse<Product>;
+  filter: ProductFilter;
+}
 
-const SORT_OPTIONS: { value: ProductSortType; label: string }[] = [
+const PRODUCT_SORT_OPTIONS: { value: ProductSortType; label: string }[] = [
+  // { value: "BEST_SELLING_WEEKLY", label: "Bán chạy tuần" },
+  // { value: "BEST_SELLING_MONTHLY", label: "Bán chạy tháng" },
   { value: "PRICE_ASC", label: "Giá thấp đến cao" },
   { value: "PRICE_DESC", label: "Giá cao đến thấp" },
   { value: "NAME_ASC", label: "Tên A-Z" },
   { value: "NAME_DESC", label: "Tên Z-A" },
 ];
 
-const ON_SALE_VALUE = "ON_SALE";
-
-export function ProductListPage() {
-  const navigate = useNavigate();
-
-  const { category: categorySlugParam } = useParams<{ category: string }>();
-  const { pathname } = useLocation();
+export default function ProductListPage() {
+  const { products, saleProducts, filter } =
+    useLoaderData() as ProductListLoaderData;
+  const { categories } = useCategoryContext();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const isSearchMode = pathname === "/tim-kiem";
-  const keyword = searchParams.get("keyword") ?? "";
-  const page = Number(searchParams.get("page") ?? 0);
+  const currentSort = searchParams.get("sort") ?? "";
 
-  const selectedSubCategorySlugs = parseListParam(searchParams, "categories");
-  const selectedBrandSlugs = parseListParam(searchParams, "brands");
+  const searchKeyword = filter.keyword ?? undefined;
+  const categorySlug = searchParams.get("categorySlug") ?? undefined;
+  const similar = findSimilarCategories(categories, searchKeyword);
 
-  const { categories } = useCategory();
-
-  const { brands } = useBrandList({
-    categorySlug: !isSearchMode ? categorySlugParam : undefined,
-    includeDescendants: !isSearchMode,
+  const { brands } = useBrands({
+    includeDescendants: true,
+    categorySlug: categorySlug ?? similar[0]?.slug,
   });
 
-  // ----- Xác định vị trí trong cây category (chỉ để dựng UI, tối đa 3 cấp) -----
-  const categoryPath = useMemo<Category[] | null>(() => {
-    if (isSearchMode || !categorySlugParam) return null;
-    return findCategoryPath(categories, categorySlugParam);
-  }, [isSearchMode, categorySlugParam, categories]);
+  const activeCategory = findCategoryBySlug(categories, categorySlug);
 
-  const level1 = categoryPath?.[0] ?? null;
-  const level2Selected = categoryPath?.[1] ?? null;
-  const level2Items = level1?.children ?? [];
-  const level3Items = level2Selected?.children ?? [];
+  const saleTrackRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const selectedSubCategoryIds = useMemo(
-    () =>
-      new Set(
-        level3Items
-          .filter((c) => selectedSubCategorySlugs.includes(c.slug))
-          .map((c) => c.id),
-      ),
-    [level3Items, selectedSubCategorySlugs],
-  );
+  function checkScrollButtons() {
+    const el = saleTrackRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth);
+  }
 
-  const matchedCategories = useMemo(() => {
-    if (!isSearchMode || !keyword) return [];
-    return filterCategoriesByKeyword(categories, keyword);
-  }, [isSearchMode, keyword, categories]);
+  function scrollSale(direction: 1 | -1) {
+    saleTrackRef.current?.scrollBy({
+      left: saleTrackRef.current.clientWidth * direction,
+      behavior: "smooth",
+    });
+  }
 
-  const sort = (searchParams.get("sort") as ProductSortType) ?? undefined;
-  const onSale = searchParams.get("onSale") === "true" ? true : undefined;
-
-  // Giá trị hiển thị trên <select>: rỗng (mặc định) | ON_SALE_VALUE | 1 trong các ProductSortType
-  const sortSelectValue = onSale ? ON_SALE_VALUE : (sort ?? "");
-
-  const { products, loading, error, totalPages } = useProductList({
-    page,
-    size: PAGE_SIZE,
-    sort,
-    onSale: true,
-    keyword: isSearchMode ? keyword : undefined,
-    categorySlugs: !isSearchMode
-      ? selectedSubCategorySlugs.length > 0
-        ? selectedSubCategorySlugs
-        : categorySlugParam
-          ? [categorySlugParam]
-          : undefined
-      : undefined,
-    includeDescendants: !isSearchMode && selectedSubCategorySlugs.length === 0,
-    brandSlugs: selectedBrandSlugs.length > 0 ? selectedBrandSlugs : undefined,
-  });
-
-  const productSalesCategory = level2Selected ?? level1;
-
-  const {
-    products: productSales,
-    loading: productSalesLoading,
-    totalPages: productSalesTotalPages,
-  } = useProductList({
-    page: 0,
-    size: 50,
-    onSale: true,
-    keyword: isSearchMode ? keyword : undefined,
-    categorySlugs:
-      !isSearchMode && productSalesCategory
-        ? [productSalesCategory.slug]
-        : undefined,
-    includeDescendants: !isSearchMode,
-    brandSlugs: selectedBrandSlugs.length > 0 ? selectedBrandSlugs : undefined,
-  });
-
-  const toggleListParam = (key: string, current: string[], value: string) => {
-    const next = toggleListValue(current, value);
-    const nextParams = new URLSearchParams(searchParams);
-    if (next.length > 0) nextParams.set(key, next.join(","));
-    else nextParams.delete(key);
-    nextParams.delete("page");
-    setSearchParams(nextParams);
-  };
-
-  const updateParam = (key: string, value: string | undefined) => {
+  function handleSort(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = new URLSearchParams(searchParams);
-    if (value === undefined || value === "") next.delete(key);
-    else next.set(key, value);
-    if (key !== "page") next.delete("page");
-    setSearchParams(next);
-  };
-
-  const handleSortChange = (value: string) => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("page");
-
-    if (value === "") {
-      // Mặc định: không sort, không lọc giảm giá
-      next.delete("sort");
-      next.delete("onSale");
-    } else if (value === ON_SALE_VALUE) {
-      next.set("onSale", "true");
-      next.delete("sort");
+    if (e.target.value) {
+      next.set("sort", e.target.value);
     } else {
-      next.set("sort", value);
-      next.delete("onSale");
+      next.delete("sort");
     }
-
+    next.delete("page");
     setSearchParams(next);
-  };
-
-  const title = isSearchMode
-    ? keyword
-    : (level2Selected?.name ?? level1?.name ?? "");
+  }
 
   return (
-    <Container className="space-y-5">
-      <div className="bg-white rounded-md flex items-center px-3 py-2 gap-3">
-        <button onClick={() => navigate(-1)} aria-label="Quay lại">
-          <ChevronLeft size={20} />
-        </button>
-        <h1 className="font-bold text-base">{title}</h1>
-      </div>
-      {isSearchMode && matchedCategories.length > 0 && (
-        <div className="bg-white shadow-sm rounded-md px-3 py-3">
-          <p className="text-base mb-2">Lọc theo ngành hàng:</p>
-          <ScrollableCategoryRow
-            categories={matchedCategories}
-            mode="navigate"
-            selectedId={null}
-          />
+    <Container className="flex">
+      <aside className="w-64 h-fit shrink-0 rounded-md bg-white">
+        <CategoryMenuPanel categories={categories} />
+      </aside>
+      <div className="flex flex-col flex-1 min-w-0 ml-5">
+        <div className="bg-white flex items-center rounded-md py-2 px-3 gap-4">
+          <ChevronLeft size={24} />
+          <span>
+            {searchKeyword ?? activeCategory?.name ?? "Tất cả sản phẩm"}
+          </span>
         </div>
-      )}
-
-      {!isSearchMode && level2Items.length > 0 && (
-        <div className="bg-white shadow-sm rounded-md px-3 py-2">
-          <ScrollableCategoryRow
-            categories={level2Items}
-            mode="navigate"
-            selectedId={level2Selected?.id ?? null}
-            size="md"
-          />
+        <div className="mt-5">
+          <CategoryFilterTree />
         </div>
-      )}
 
-      {!isSearchMode && level3Items.length > 0 && (
-        <div className="bg-white shadow-sm rounded-md px-3 py-2">
-          <ScrollableCategoryRow
-            categories={level3Items}
-            mode="multiSelect"
-            selectedIds={selectedSubCategoryIds}
-            onToggle={(cat) =>
-              toggleListParam("categories", selectedSubCategorySlugs, cat.slug)
-            }
-            size="sm"
-          />
+        <div className="mt-5 bg-white rounded-md flex px-3 py-2 gap-2 items-center">
+          <select
+            value={currentSort}
+            onChange={handleSort}
+            className="border rounded-md px-3 py-2 text-sm shrink-0"
+          >
+            <option value="">Sắp xếp</option>
+            {PRODUCT_SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {brands?.length > 0 && <BrandFilterRow brands={brands} />}
         </div>
-      )}
 
-      <div className="flex items-center gap-3 bg-white shadow-sm rounded-md px-3 py-2">
-        <select
-          value={sortSelectValue}
-          onChange={(e) => handleSortChange(e.target.value)}
-          className="border rounded-md px-3 py-2 text-sm shrink-0"
-        >
-          <option value="">Sắp xếp</option>
-          <option value={ON_SALE_VALUE}>Sản phẩm giảm giá</option>
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {brands.length > 0 && (
-          <div className="flex-1 min-w-0">
-            <ScrollableBrandRow
-              brands={brands}
-              selectedBrands={selectedBrandSlugs}
-              onToggle={(brand) =>
-                toggleListParam("brands", selectedBrandSlugs, brand.slug)
-              }
-            />
+        {saleProducts.content.length > 0 && (
+          <div className="mt-5">
+            <div className="bg-gradient-to-b from-[#4AC15C] to-[#B4FFBF] rounded-xl">
+              <h2 className="text-white font-bold text-lg pt-4 px-2">
+                SẢN PHẨM KHUYẾN MÃI
+              </h2>
+
+              <div className="relative px-2 py-4">
+                <div
+                  ref={saleTrackRef}
+                  onScroll={checkScrollButtons}
+                  onLoad={checkScrollButtons}
+                  className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-hide"
+                >
+                  {saleProducts.content.map((p) => (
+                    <div
+                      key={p.id}
+                      className="shrink-0 w-[calc((100%-24px)/3)]"
+                    >
+                      <ProductCardRow product={p} className="h-36" />
+                    </div>
+                  ))}
+                </div>
+
+                {canScrollLeft && (
+                  <button
+                    onClick={() => scrollSale(-1)}
+                    className="cursor-pointer absolute left-0 top-1/2 -translate-y-1/2 h-[50%] w-7 rounded-l-lg bg-neutral-500/40 hover:bg-neutral-500/60 text-white flex items-center justify-center transition-colors"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                )}
+
+                {canScrollRight && (
+                  <button
+                    onClick={() => scrollSale(1)}
+                    className="cursor-pointer absolute right-0 top-1/2 -translate-y-1/2 h-[50%] w-7 rounded-l-lg bg-neutral-500/40 hover:bg-neutral-500/60 text-white flex items-center justify-center transition-colors"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {!productSalesLoading && productSales.length > 0 && (
-        <ScrollableProductRow
-          products={productSales}
-          title="SẢN PHẨM KHUYẾN MÃI"
-        />
-      )}
-
-      {loading && <div className="h-64" />}
-      {!loading && !error && (
-        <>
-          {products.length === 0 ? (
-            <p className="text-center text-neutral-500 py-10">
-              Không tìm thấy sản phẩm nào.
-            </p>
-          ) : (
-            <div className="grid grid-cols-5 gap-4">
-              {products.map((p) => (
-                <div
-                  key={p.id}
-                  className="rounded-md hover:shadow-md transition-shadow bg-white"
-                >
+        {products.content.length > 0 && (
+          <div>
+            <div className="mt-5 grid grid-cols-4 gap-3">
+              {products.content.map((p) => (
+                <div className="bg-white">
                   <ProductCard product={p} />
                 </div>
               ))}
             </div>
-          )}
+            <Pagination
+              currentPage={products.page}
+              totalPages={products.totalPages}
+              className="mt-5"
+            />
+          </div>
+        )}
 
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={(newPage) => updateParam("page", String(newPage))}
-          />
-        </>
-      )}
+        {products.content.length <= 0 && (
+          <div className="rounded-md mt-5 bg-white h-64 w-full flex items-center justify-center">
+            <span className="text-lg">Không tìm thấy sản phẩm phù hợp!</span>
+          </div>
+        )}
+      </div>
     </Container>
   );
 }

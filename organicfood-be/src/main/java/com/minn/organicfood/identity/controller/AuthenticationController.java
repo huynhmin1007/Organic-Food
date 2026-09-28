@@ -3,15 +3,20 @@ package com.minn.organicfood.identity.controller;
 import com.minn.organicfood.identity.dto.request.*;
 import com.minn.organicfood.identity.dto.response.AuthenticationResponse;
 import com.minn.organicfood.identity.service.AuthenticationService;
+import com.minn.organicfood.shared.config.CookieProperties;
+import com.minn.organicfood.shared.exception.BaseErrorCode;
+import com.minn.organicfood.shared.exception.BusinessException;
+import com.minn.organicfood.shared.exception.ErrorCode;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -21,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
     AuthenticationService authenticationService;
+    CookieProperties cookieProperties;
 
     @PostMapping("/register")
     public String register(@RequestBody @Valid RegisterRequest request) {
@@ -42,13 +48,67 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public AuthenticationResponse login(@RequestBody @Valid TokenExchangeRequest request) {
-        log.info("Login request: {}", request);
-        return authenticationService.exchangeToken(request);
+    public ResponseEntity<AuthenticationResponse> login(
+            @RequestBody @Valid TokenExchangeRequest request,
+            HttpServletResponse response) {
+
+        AuthenticationResponse authResponse = authenticationService.exchangeToken(request);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(cookieProperties.isSecure())
+                .sameSite("Strict")
+                .path("/organicfood/api/v1/auth")
+                .maxAge(authResponse.getRefreshExpiresIn())
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(AuthenticationResponse.builder()
+                .accessToken(authResponse.getAccessToken())
+                .expiresIn(authResponse.getExpiresIn())
+                .build());
     }
 
     @PostMapping("/token/refresh")
-    public AuthenticationResponse refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
-        return authenticationService.refreshToken(request.getRefreshToken());
+    public ResponseEntity<AuthenticationResponse> refreshToken(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
+
+        if (refreshToken == null) {
+            throw BusinessException.of(ErrorCode.UNAUTHORIZED)
+                    .withDetail("Missing refresh token");
+        }
+
+        AuthenticationResponse authResponse = authenticationService.refreshToken(refreshToken);
+
+        // Rotation
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(cookieProperties.isSecure())
+                .sameSite("Strict")
+                .path("/organicfood/api/v1/auth")
+                .maxAge(authResponse.getRefreshExpiresIn())
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(AuthenticationResponse.builder()
+                .accessToken(authResponse.getAccessToken())
+                .expiresIn(authResponse.getExpiresIn())
+                .build());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(cookieProperties.isSecure())
+                .sameSite("Strict")
+                .path("/organicfood/api/v1/auth")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.noContent().build();
     }
 }

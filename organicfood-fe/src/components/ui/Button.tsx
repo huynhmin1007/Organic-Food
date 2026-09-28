@@ -1,80 +1,76 @@
-import { type ButtonHTMLAttributes } from "react";
-import clsx from "clsx";
+// src/components/ui/Button.tsx
+import { Link } from "react-router-dom";
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import Spinner from "./Spinner";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "solid" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
-  fullWidth?: boolean;
-  loading?: boolean;
-};
+const buttonStyles = cva(
+  "inline-flex items-center justify-center gap-2 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:pointer-events-none",
+  {
+    variants: {
+      variant: {
+        primary:
+          "bg-primary-500 text-white border border-transparent hover:bg-primary-700",
+
+        outline:
+          "bg-white text-primary-500 border border-primary-500 hover:bg-primary-500 hover:text-white",
+
+        ghost:
+          "bg-transparent text-stone-700 border border-transparent hover:bg-stone-100",
+
+        danger:
+          "bg-red-600 text-white border border-transparent hover:bg-red-700",
+      },
+      size: {
+        sm: "text-sm px-3 py-1.5",
+        md: "text-sm px-5 py-2.5",
+        lg: "text-base px-6 py-3",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "md",
+    },
+  },
+);
+
+interface ButtonBaseProps extends VariantProps<typeof buttonStyles> {
+  children: ReactNode;
+  className?: string;
+  isLoading?: boolean;
+  to?: string;
+}
+
+type ButtonProps = ButtonBaseProps & ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function Button({
-  variant = "solid",
-  size = "md",
-  fullWidth = false,
-  loading = false,
-  disabled,
-  className,
   children,
-  ...rest
+  variant,
+  size,
+  className,
+  isLoading = false,
+  to,
+  disabled,
+  ...props
 }: ButtonProps) {
+  const classes = clsx(
+    buttonStyles({ variant, size }),
+    className,
+    "cursor-pointer",
+  );
+
+  if (to) {
+    return (
+      <Link to={to} className={classes}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <button
-      disabled={disabled || loading}
-      className={clsx(
-        // Base – luôn có
-        "inline-flex items-center justify-center gap-2 font-medium rounded-md transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-
-        // Variant
-        variant === "solid" && [
-          "bg-primary-500 text-white",
-          "hover:bg-primary-600 active:bg-primary-700",
-        ],
-        variant === "outline" && [
-          "border border-primary-500 text-primary-500 bg-transparent",
-          "hover:bg-primary-50 active:bg-primary-100",
-        ],
-        variant === "ghost" && [
-          "text-primary-500 bg-transparent",
-          "hover:bg-primary-50 active:bg-primary-100",
-        ],
-
-        // Size
-        size === "sm" && "text-xs px-3 py-1.5",
-        size === "md" && "text-sm px-4 py-2",
-        size === "lg" && "text-base px-6 py-3",
-
-        // Full width
-        fullWidth && "w-full",
-
-        className,
-      )}
-      {...rest}
-    >
-      {/* Loading spinner */}
-      {loading && (
-        <svg
-          className="animate-spin h-4 w-4 flex-shrink-0"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
-          />
-        </svg>
-      )}
+    <button className={classes} disabled={disabled || isLoading} {...props}>
+      {isLoading && <Spinner size="sm" className="text-current" />}
       {children}
     </button>
   );

@@ -1,128 +1,99 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { isValidEmail, isValidPassword } from "../lib/validators";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import Container from "../components/ui/Container";
+import { useForm } from "../hooks/useForm";
+import { combine, email, password, required } from "../lib/validators";
+import Button from "../components/ui/Button";
+import FormField from "../components/ui/FormField";
+import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import { ApiError } from "../types/api";
+import clsx from "clsx";
+import { useModal } from "../context/ModalContext";
+
+export const TEST_ACCOUNT = {
+  email: "manager0@organicfood.vn",
+  password: "Password123@",
+};
 
 export default function LoginPage() {
+  const { login, isAuthenticated } = useAuth();
+  const { openModal, closeModal } = useModal();
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    openModal(<TestAccountModal />);
+    return closeModal;
+  }, [isAuthenticated, openModal, closeModal]);
+
+  if (isAuthenticated) return <Navigate to="/" replace />;
+
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/";
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{
-    email?: string;
-    password?: string;
-  }>({});
-  const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { values, errors, handleChange, validateAll } = useForm(
+    { email: TEST_ACCOUNT.email, password: TEST_ACCOUNT.password },
+    {
+      email: combine(required("Vui lòng nhập email"), email()),
+      password: required("Vui lòng nhập mật khẩu"),
+    },
+  );
 
-  const validate = (): boolean => {
-    const errors: typeof fieldErrors = {};
-
-    if (!email.trim()) {
-      errors.email = "Vui lòng nhập email";
-    } else if (!isValidEmail(email)) {
-      errors.email = "Email không hợp lệ";
-    }
-
-    if (!password) {
-      errors.password = "Vui lòng nhập mật khẩu";
-    } else if (!isValidPassword(password)) {
-      errors.password =
-        "Mật khẩu tối thiểu 8 ký tự, gồm ít nhất 1 số và 1 ký tự đặc biệt";
-    }
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setFormError(null);
+    if (!validateAll()) return;
 
-    if (!validate()) return;
-
-    setSubmitting(true);
     try {
-      await login(email, password);
-      navigate(from);
+      setIsSubmitting(true);
+      setSubmitError(null);
+      await login(values.email, values.password);
+      navigate("/");
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Đăng nhập thất bại");
+      setSubmitError(
+        err instanceof ApiError
+          ? err.message
+          : "Đăng nhập thất bại, vui lòng thử lại",
+      );
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
-  };
-
-  const handleGoogleLogin = () => {};
-
-  const handleFacebookLogin = () => {};
+  }
 
   return (
     <Container>
       <div className="bg-white rounded-md px-3 py-4 max-w-3xl mx-auto">
-        <div className="border-b border-neutral-200 pb-3">
+        <div className="border-b border-stone-200 pb-3">
           <h1 className="font-bold text-xl">ĐĂNG NHẬP TÀI KHOẢN</h1>
           <div className="text-sm mt-1">
             Bạn chưa có tài khoản? Đăng ký{" "}
-            <Link to="/account/register" className="underline text-primary-600">
-              tại đây
+            <Link to={"/account/register"}>
+              <span className="text-primary-500 underline">tại đây</span>
             </Link>
           </div>
         </div>
-
         <form
           onSubmit={handleSubmit}
-          className="mx-auto flex flex-col space-y-2 py-4 max-w-lg"
-          noValidate
+          className="flex flex-col space-y-3 mx-auto py-4 max-w-lg"
         >
-          {formError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-md px-3 py-2 mb-2">
-              {formError}
-            </div>
-          )}
-
-          <label className="text-sm font-bold" htmlFor="email">
-            Email <span className="text-red-500">*</span>
-          </label>
-          <input
+          <FormField
             id="email"
-            name="email"
+            label="Email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`rounded-md border py-2 px-4 outline-none ${
-              fieldErrors.email
-                ? "border-red-400 focus:border-red-500"
-                : "border-neutral-200 focus:border-primary-500"
-            }`}
             placeholder="Email"
+            value={values.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            error={errors.email}
           />
-          {fieldErrors.email && (
-            <p className="text-xs text-red-500">{fieldErrors.email}</p>
-          )}
 
-          <label className="text-sm font-bold mt-2" htmlFor="password">
-            Mật khẩu <span className="text-red-500">*</span>
-          </label>
-          <input
+          <FormField
             id="password"
-            name="password"
+            label="Mật khẩu"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`rounded-md border py-2 px-4 outline-none ${
-              fieldErrors.password
-                ? "border-red-400 focus:border-red-500"
-                : "border-neutral-200 focus:border-primary-500"
-            }`}
             placeholder="Mật khẩu"
+            value={values.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+            error={errors.password}
           />
-          {fieldErrors.password && (
-            <p className="text-xs text-red-500">{fieldErrors.password}</p>
-          )}
 
           <div className="text-xs mt-1">
             Bạn quên mật khẩu? Nhấn vào{" "}
@@ -131,20 +102,20 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <button
+          <Button
             type="submit"
-            disabled={submitting}
-            className="bg-primary-500 hover:bg-primary-600 disabled:opacity-60 disabled:cursor-not-allowed
-                       text-white rounded-md w-full py-2 text-lg font-semibold mt-3 transition-colors"
+            variant="primary"
+            size="md"
+            className="w-full"
+            disabled={isSubmitting}
           >
-            {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
+            {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+          </Button>
 
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleGoogleLogin}
-              className="flex-1 flex items-center justify-center gap-2 bg-[#DB4437] hover:bg-[#c53c30]
+              className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-[#DB4437] hover:bg-[#c53c30]
                          text-white rounded-md py-2.5 text-sm font-semibold transition-colors"
             >
               <span className="font-bold">G+</span>
@@ -153,8 +124,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={handleFacebookLogin}
-              className="flex-1 flex items-center justify-center gap-2 bg-[#3B5998] hover:bg-[#334d84]
+              className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-[#3B5998] hover:bg-[#334d84]
                          text-white rounded-md py-2.5 text-sm font-semibold transition-colors"
             >
               <span className="font-bold">f</span>
@@ -164,5 +134,35 @@ export default function LoginPage() {
         </form>
       </div>
     </Container>
+  );
+}
+
+function TestAccountModal() {
+  const { closeModal } = useModal();
+
+  return (
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <h2 className="text-lg font-bold mb-2">Tài khoản dùng thử</h2>
+      <p className="text-sm text-neutral-500 mb-4">
+        Sử dụng tài khoản sau để đăng nhập và thực hiện test:
+      </p>
+
+      <div className="space-y-2 text-sm bg-neutral-50 border border-neutral-200 rounded-md p-3">
+        <div className="flex justify-between gap-4">
+          <span className="text-neutral-500">Email</span>
+          <span className="font-medium select-all">{TEST_ACCOUNT.email}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-neutral-500">Mật khẩu</span>
+          <span className="font-medium select-all">
+            {TEST_ACCOUNT.password}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <Button onClick={closeModal}>Đã hiểu</Button>
+      </div>
+    </div>
   );
 }

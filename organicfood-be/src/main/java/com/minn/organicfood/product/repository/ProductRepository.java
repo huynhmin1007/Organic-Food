@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,4 +42,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findAndLockById(@Param("id") UUID id);
+
+    @Query("""
+                SELECT COUNT(p)
+                FROM Product p
+                WHERE p.id IN :ids
+            """)
+    long countExistingProducts(@Param("ids") Collection<UUID> ids);
 }

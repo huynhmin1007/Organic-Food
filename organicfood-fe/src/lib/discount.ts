@@ -1,4 +1,4 @@
-import type { ProductDiscount } from "./types/product";
+import type { ProductDiscount } from "../types/product";
 
 export type DiscountDisplay = {
   sellingPrice: number;
@@ -6,65 +6,76 @@ export type DiscountDisplay = {
   cornerBadge?: string;
   belowPriceText?: string;
   belowPriceBadge?: string;
+  pricePerKgText: string | null;
 };
 
 type PriceSource = {
+  categoryId: number;
+  packDetail: string | null | undefined;
   price: number;
-  discounts: ProductDiscount[] | null | undefined;
+  discount?: ProductDiscount;
 };
 
-export function getDiscountDisplay(source: PriceSource): DiscountDisplay {
-  const basePrice = source.price;
-  const discount = source.discounts?.[0];
+export function getDiscountDisplay({
+  categoryId,
+  packDetail,
+  price,
+  discount,
+}: PriceSource): DiscountDisplay {
+  const pricePerKgText = getPricePerKgText(categoryId, packDetail, price);
 
   if (!discount) {
-    return { sellingPrice: basePrice };
+    return { sellingPrice: price, pricePerKgText: pricePerKgText };
   }
 
   switch (discount.discountType) {
     case "PERCENTAGE": {
       const percent = discount.discountPercent;
-      const sellingPrice = Math.round(basePrice * (1 - percent / 100));
+      const sellingPrice = Math.round(price * (1 - percent / 100));
       return {
         sellingPrice,
-        originalPrice: basePrice,
+        originalPrice: price,
         cornerBadge: `-${percent}%`,
+        pricePerKgText: pricePerKgText,
       };
     }
 
     case "FIXED_PRICE_FOR_QUANTITY": {
       const { buyQuantity, fixedPrice } = discount;
-      const originalTotal = basePrice * buyQuantity;
+      const originalTotal = price * buyQuantity;
       const percent =
         originalTotal > 0
           ? Math.round((1 - fixedPrice / originalTotal) * 100)
           : 0;
 
       return {
-        sellingPrice: basePrice,
+        sellingPrice: price,
         belowPriceText: `Mua ${buyQuantity} giảm còn ${fixedPrice.toLocaleString("vi-VN")}đ`,
         belowPriceBadge: percent > 0 ? `-${percent}%` : undefined,
+        pricePerKgText: pricePerKgText,
       };
     }
 
     case "BUY_X_GET_Y_FREE": {
       const { buyQuantity, getQuantity } = discount;
       return {
-        sellingPrice: basePrice,
+        sellingPrice: price,
         belowPriceText: `Mua ${buyQuantity} tặng ${getQuantity}`,
+        pricePerKgText: pricePerKgText,
       };
     }
 
     case "BUY_X_GET_Y_PERCENT_OFF": {
       const { buyQuantity, discountPercent } = discount;
       return {
-        sellingPrice: basePrice,
+        sellingPrice: price,
         belowPriceText: `Mua ${buyQuantity} giảm ${discountPercent}%`,
+        pricePerKgText: pricePerKgText,
       };
     }
 
     default:
-      return { sellingPrice: basePrice };
+      return { sellingPrice: price, pricePerKgText: pricePerKgText };
   }
 }
 

@@ -3,6 +3,10 @@ package com.minn.organicfood.profile.domain;
 import com.minn.organicfood.shared.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.Instant;
 
 @Entity
 @Table(
@@ -14,6 +18,7 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
+@EntityListeners(AuditingEntityListener.class)
 public class UserAddress extends BaseEntity<Long> {
 
     @Id
@@ -27,4 +32,7 @@ public class UserAddress extends BaseEntity<Long> {
     private String address;
 
     private boolean isDefault;
+
+    @CreatedDate
+    private Instant createdAt;
 }
