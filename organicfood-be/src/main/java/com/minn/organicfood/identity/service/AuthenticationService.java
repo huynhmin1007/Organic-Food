@@ -254,18 +254,18 @@ public class AuthenticationService {
                 throw BusinessException.of(INVALID_TOKEN);
             }
 
-//            boolean isBlacklisted = redisService.exists(BLACKLIST_PREFIX + claims.getJWTID());
-//            if (isBlacklisted) {
-//                throw BusinessException.of(TOKEN_REVOKED);
-//            }
+            boolean isBlacklisted = redisService.exists(BLACKLIST_PREFIX + claims.getJWTID());
+            if (isBlacklisted) {
+                throw BusinessException.of(TOKEN_REVOKED);
+            }
 
             String jti = claims.getJWTID();
             Date expirationTime = claims.getExpirationTime();
 
-//            long timeToLiveMillis = expirationTime.getTime() - System.currentTimeMillis();
-//            if (timeToLiveMillis > 0) {
-//                revokeToken(jti, timeToLiveMillis);
-//            }
+            long timeToLiveMillis = expirationTime.getTime() - System.currentTimeMillis();
+            if (timeToLiveMillis > 0) {
+                revokeToken(jti, timeToLiveMillis);
+            }
 
             Account user = accountRepository.findById(UUID.fromString(claims.getSubject()))
                     .orElseThrow(() -> BusinessException.of(ACCOUNT_NOT_FOUND));
