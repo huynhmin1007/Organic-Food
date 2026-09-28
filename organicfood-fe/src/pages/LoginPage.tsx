@@ -1,13 +1,12 @@
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Container from "../components/ui/Container";
 import { useForm } from "../hooks/useForm";
-import { combine, email, password, required } from "../lib/validators";
+import { combine, email, required } from "../lib/validators";
 import Button from "../components/ui/Button";
 import FormField from "../components/ui/FormField";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { ApiError } from "../types/api";
-import clsx from "clsx";
 import { useModal } from "../context/ModalContext";
 
 export const TEST_ACCOUNT = {
