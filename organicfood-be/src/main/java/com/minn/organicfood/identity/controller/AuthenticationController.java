@@ -56,7 +56,7 @@ public class AuthenticationController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
-                .sameSite("Strict")
+                .sameSite("none")
                 .path("/organicfood/api/v1/auth")
                 .maxAge(authResponse.getRefreshExpiresIn())
                 .build();
@@ -85,7 +85,7 @@ public class AuthenticationController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
-                .sameSite("Strict")
+                .sameSite("none")
                 .path("/organicfood/api/v1/auth")
                 .maxAge(authResponse.getRefreshExpiresIn())
                 .build();
@@ -103,7 +103,7 @@ public class AuthenticationController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(cookieProperties.isSecure())
-                .sameSite("Strict")
+                .sameSite("none")
                 .path("/organicfood/api/v1/auth")
                 .maxAge(0)
                 .build();
