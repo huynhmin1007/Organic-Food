@@ -77,4 +77,8 @@ public class RedisService {
     public void expire(String key, long timeout, TimeUnit timeUnit) {
         redisTemplate.expire(key, timeout, timeUnit);
     }
+
+    public void hashSetAll(String key, Map<?, ?> values) {
+        redisTemplate.opsForHash().putAll(key, values);
+    }
 }

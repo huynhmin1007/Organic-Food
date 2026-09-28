@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,4 +17,5 @@ public class UserInfo {
     String fullName;
     String phone;
     Set<UserAddressResponse> addresses;
+//    List<CartItemResponse> cart;
 }

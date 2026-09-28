@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,5 +20,5 @@ public interface ProductDiscountRepository extends JpaRepository<ProductDiscount
               AND d.startAt <= :now
               AND (d.endAt IS NULL OR d.endAt > :now)
             """)
-    List<ProductDiscount> findActiveForProducts(@Param("productIds") List<UUID> productIds, @Param("now") Instant now);
+    List<ProductDiscount> findActiveForProducts(@Param("productIds") Collection<UUID> productIds, @Param("now") Instant now);
 }

@@ -1,27 +1,48 @@
-const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
-
-export function isValidPassword(password: string): boolean {
-  return PASSWORD_PATTERN.test(password);
+export function required(message = "Trường này là bắt buộc") {
+  return (value: string) => (value.trim() === "" ? message : null);
 }
 
-export function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+export function email(message = "Email không hợp lệ") {
+  return (value: string) => {
+    if (value.trim() === "") return null; // để required() lo việc bắt buộc, tránh trùng lỗi
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    return isValid ? null : message;
+  };
 }
 
-export function isValidFullName(fullName: string): boolean {
-  const trimmed = fullName.trim();
-  // Tối thiểu 2 ký tự, không toàn số, cho phép chữ có dấu tiếng Việt + khoảng trắng
-  return trimmed.length >= 2 && /^[\p{L}\s]+$/u.test(trimmed);
+export function minLength(min: number, message?: string) {
+  return (value: string) =>
+    value.length < min ? (message ?? `Tối thiểu ${min} ký tự`) : null;
 }
 
-export function isValidVietnamesePhone(phone: string): boolean {
-  const trimmed = phone.trim();
-  // Số VN dạng nhập tay: bắt đầu 0, theo sau là 1 trong các đầu số di động hợp lệ, tổng 10 số
-  return /^0(3[2-9]|5[5689]|7[0-9]|8[1-9]|9[0-9])\d{7}$/.test(trimmed);
+// Gộp nhiều validator thành 1 — check lần lượt, dừng ở lỗi đầu tiên gặp phải
+export function combine(...validators: Array<(v: string) => string | null>) {
+  return (value: string) => {
+    for (const validate of validators) {
+      const message = validate(value);
+      if (message) return message;
+    }
+    return null;
+  };
 }
 
-/** Chuyển "0988431111" -> "+84988431111" để gửi lên BE */
-export function toE164VietnamesePhone(phone: string): string {
-  const trimmed = phone.trim();
-  return "+84" + trimmed.slice(1);
+export function password(message?: string) {
+  const pattern = /^(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+  return (value: string) => {
+    if (value === "") return null; // để required() lo việc bắt buộc
+    return pattern.test(value)
+      ? null
+      : (message ??
+          "Mật khẩu phải có ít nhất 8 ký tự, gồm 1 số và 1 ký tự đặc biệt");
+  };
+}
+
+export function phone(
+  message = "Số điện thoại không hợp lệ (định dạng +84xxxxxxxxx)",
+) {
+  const pattern = /^\+[1-9]\d{7,14}$/;
+  return (value: string) => {
+    if (value.trim() === "") return null; // rỗng = hợp lệ, khớp đúng logic backend (optional field)
+    return pattern.test(value) ? null : message;
+  };
 }

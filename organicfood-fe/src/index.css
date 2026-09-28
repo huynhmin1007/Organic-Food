@@ -1,9 +1,61 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  body {
-    @apply font-sans text-neutral-800 antialiased;
+@theme {
+  --color-primary-50: #eaf6e6;
+  --color-primary-100: #c5e8bc;
+  --color-primary-500: #5bbb46;
+  --color-primary-600: #447d4e;
+  --color-primary-700: #3a7a2d;
+
+  --color-sale: #ff001e;
+
+  --color-stone-hover: #f8f9fa;
+
+  --font-sans: "Roboto", system-ui, sans-serif;
+  --font-display: "Roboto", system-ui, sans-serif;
+
+  --radius-card: 0.75rem;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  @apply bg-[#f4f4f4] text-stone-800 font-sans antialiased;
+}
+
+.card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+@keyframes loading-dots {
+  0% {
+    content: "";
   }
+
+  25% {
+    content: ".";
+  }
+
+  50% {
+    content: "..";
+  }
+
+  75%,
+  100% {
+    content: "...";
+  }
+}
+
+.animate-loading-dots::after {
+  content: "";
+  animation: loading-dots 1.2s steps(1, end) infinite;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

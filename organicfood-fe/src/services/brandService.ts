@@ -1,19 +1,21 @@
-import axiosClient from "../lib/axiosClient";
-import type { ApiResponse } from "../lib/types/api";
-import type { Brand } from "../lib/types/brand";
+import { apiClient } from "../lib/axios";
+import type { Brand } from "../types/brand";
 
-export async function fetchBrands(
-  categoryId?: number,
-  categorySlug?: string,
-  includeDescendants?: boolean,
+export interface BrandFilter {
+  categoryId?: number;
+  categorySlug?: string;
+  includeDescendants?: boolean;
+  keyword?: string;
+}
+
+export async function getBrands(
+  filter: BrandFilter,
+  signal?: AbortSignal,
 ): Promise<Brand[]> {
-  const { data } = await axiosClient.get<ApiResponse<Brand[]>>("/brands", {
-    params: {
-      categoryId,
-      categorySlug,
-      includeDescendants,
-    },
+  const { data } = await apiClient.get<Brand[]>("/brands", {
+    params: filter,
+    signal,
   });
 
-  return data.data;
+  return data;
 }

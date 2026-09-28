@@ -1,19 +1,13 @@
-import axiosClient from "../lib/axiosClient";
-import type { ApiResponse } from "../lib/types/api";
-import type { OrderResponse, PlaceOrderPayload } from "../lib/types/order";
+import { apiClient } from "../lib/axios";
+import type { Order, PlaceOrderRequest } from "../types/order";
 
-export async function placeOrder(
-  payload: PlaceOrderPayload,
-): Promise<OrderResponse> {
-  const { data } = await axiosClient.post<ApiResponse<OrderResponse>>(
-    "/orders/place-order",
-    payload,
-  );
-  return data.data;
+export async function placeOrder(request: PlaceOrderRequest): Promise<Order> {
+  const { data } = await apiClient.post("/orders/place-order", request);
+
+  return data;
 }
 
-export async function getOrders(): Promise<OrderResponse[]> {
-  const { data } =
-    await axiosClient.get<ApiResponse<OrderResponse[]>>("/orders");
-  return data.data;
+export async function getOrders(signal?: AbortSignal): Promise<Order[]> {
+  const { data } = await apiClient.get("/orders", { signal });
+  return data;
 }

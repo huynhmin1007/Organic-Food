@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 import { Camera, User } from "lucide-react";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
@@ -15,6 +15,7 @@ export default function AccountProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFullName(user?.fullName ?? "");
   }, [user]);
 
@@ -48,14 +49,14 @@ export default function AccountProfilePage() {
     e.preventDefault();
   };
 
-  const avatarInitial = user.fullName.trim().charAt(0).toUpperCase();
+  const avatarInitial = user?.fullName.trim().charAt(0).toUpperCase();
 
   return (
     <div className="flex flex-col space-y-3">
       <div className="border-b border-neutral-200 pb-2 mb-4">
         <h2 className="text-lg font-bold">Tài Khoản</h2>
         <span className="text-sm">
-          Xin chào <span className="font-bold">{user.fullName}</span>
+          Xin chào <span className="font-bold">{user?.fullName}</span>
         </span>
       </div>
 
@@ -77,7 +78,7 @@ export default function AccountProfilePage() {
 
           <div className="flex items-center gap-4">
             <label>Email</label>
-            <span className="text-xs">{user.email}</span>
+            <span className="text-xs">{user?.email}</span>
             <Link
               to="/account/change-email"
               className="text-primary-500 underline"
@@ -88,7 +89,7 @@ export default function AccountProfilePage() {
 
           <div className="flex items-center gap-4">
             <label>Số điện thoại</label>
-            <span className="text-xs">{user.phone}</span>
+            <span className="text-xs">{user?.phone}</span>
             <Link
               to="/account/change-phone"
               className="text-primary-500 underline"

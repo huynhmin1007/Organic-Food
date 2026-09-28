@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.IsoFields;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -181,5 +182,27 @@ public class ProductService {
     public Product getAndLockProduct(UUID productId) {
         return productRepository.findAndLockById(productId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    public boolean isExists(Collection<UUID> ids) {
+        long count = productRepository.countExistingProducts(ids);
+        return count == ids.size();
+    }
+
+    public List<Product> findAllByIds(Collection<UUID> ids) {
+        return productRepository.findAllById(ids);
+    }
+
+    public List<ProductResponse> enrichWithDiscounts(Collection<Product> products) {
+        List<UUID> ids = products.stream().map(Product::getId).toList();
+        Map<UUID, List<ProductDiscount>> discounts = productDiscountRepository.findActiveForProducts(ids, Instant.now()).stream()
+                .collect(Collectors.groupingBy(ProductDiscount::getProductId));
+
+        List<ProductResponse> mapped = products.stream()
+                .map(product -> mapper.toListItemResponse(
+                        product, discounts.getOrDefault(product.getId(), List.of())))
+                .toList();
+
+        return mapped;
     }
 }

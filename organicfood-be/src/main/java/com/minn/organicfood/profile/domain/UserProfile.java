@@ -4,6 +4,7 @@ import com.minn.organicfood.shared.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -52,5 +53,6 @@ public class UserProfile extends BaseEntity<UUID> {
             orphanRemoval = true
     )
     @Builder.Default
+    @OrderBy("createdAt DESC")
     private Set<UserAddress> addresses = new HashSet<>();
 }

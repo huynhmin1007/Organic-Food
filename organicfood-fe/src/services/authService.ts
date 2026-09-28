@@ -1,43 +1,31 @@
-import axiosClient from "../lib/axiosClient";
-import type { ApiResponse } from "../lib/types/api";
-import type {
-  AuthenticationResponse,
-  LoginPayload,
-  RegisterPayload,
-  UserInfo,
-  VerifyOtpPayload,
-} from "../lib/types/user";
+import { apiClient } from "../lib/axios";
+import type { AuthenticationResponse } from "../types/auth";
+import type { User } from "../types/user";
 
 export async function login(
-  payload: LoginPayload,
+  email: string,
+  password: string,
 ): Promise<AuthenticationResponse> {
-  const { data } = await axiosClient.post<ApiResponse<AuthenticationResponse>>(
-    "/auth/login",
-    payload,
+  const { data } = await apiClient.post<AuthenticationResponse>("/auth/login", {
+    email,
+    password,
+  });
+  return data;
+}
+
+export async function refreshToken(): Promise<AuthenticationResponse> {
+  const { data } = await apiClient.post<AuthenticationResponse>(
+    "/auth/token/refresh",
   );
-  return data.data;
+  return data;
 }
 
-export async function getMyInfo(): Promise<UserInfo> {
-  const { data } =
-    await axiosClient.get<ApiResponse<UserInfo>>("/users/my-info");
-  return data.data;
+export async function logout(): Promise<void> {
+  await apiClient.post("/auth/logout");
 }
 
-export async function register(payload: RegisterPayload): Promise<void> {
-  await axiosClient.post<ApiResponse<null>>("/auth/register", payload);
-}
-
-export async function verifyRegisterOtp(
-  payload: VerifyOtpPayload,
-): Promise<void> {
-  await axiosClient.post<ApiResponse<null>>("/auth/register/verify", payload);
-}
-
-export async function resendRegisterOtp(email: string): Promise<string> {
-  const { data } = await axiosClient.post<ApiResponse<string>>(
-    "/auth/register/resend-otp",
-    { email },
-  );
-  return data.data;
+export async function getUserInfo(): Promise<User> {
+  const { data } = await apiClient.get<User>("/users/my-info");
+  console.log(data);
+  return data;
 }
