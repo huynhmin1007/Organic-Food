@@ -1,12 +1,12 @@
 import { Search } from "lucide-react";
-import React, { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function SearchBar({ className = "" }: { className?: string }) {
   const [keyword, setKeyword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!keyword.trim()) return;
