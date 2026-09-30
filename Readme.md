@@ -53,7 +53,7 @@ The project covers the core business flows of a food retail platform:
 | | |
 |---|---|
 | 🔗 **Frontend URL** | [https://organic-food-mauve.vercel.app/](https://organic-food-mauve.vercel.app/) |
-| 📘 **API Docs (Swagger)** | `<BACKEND_URL>/organicfood/api/v1/swagger-ui.html` |
+| 📘 **API Docs (Swagger)** | `` |
 
 ---
 
