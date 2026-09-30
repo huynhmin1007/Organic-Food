@@ -115,7 +115,7 @@ The project covers the core business flows of a food retail platform:
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_REPO_URL>
+git clone https://github.com/huynhmin1007/Organic-Food
 cd organic-food
 ```
 
