@@ -58,12 +58,25 @@ public class ProductSpecification {
         };
     }
 
-    public static Specification<Product> hasNameLike(String keyword) {
-        return (root, query, cb) ->
-                cb.like(
-                        cb.lower(root.get("name")),
-                        "%" + keyword.toLowerCase() + "%"
-                );
+    public static Specification<Product> hasNameLike(List<String> keywords) {
+        return (root, query, cb) -> {
+            if (keywords == null || keywords.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            List<Predicate> predicates = keywords.stream()
+                    .map(keyword -> cb.like(
+                            cb.lower(root.get("name")),
+                            "%" + keyword.toLowerCase() + "%"
+                    ))
+                    .toList();
+
+            query.orderBy(
+                    cb.asc(cb.function("RANDOM", Double.class))
+            );
+
+            return cb.or(predicates.toArray(new Predicate[0]));
+        };
     }
 
     public static Specification<Product> hasPriceBetween(Long minPrice, Long maxPrice) {
@@ -122,8 +135,9 @@ public class ProductSpecification {
         if (filter.getBrandIds() != null || filter.getBrandSlugs() != null)
             spec = spec.and(hasBrand(filter.getBrandIds(), filter.getBrandSlugs()));
 
-        if (StringUtils.hasText(filter.getKeyword()))
-            spec = spec.and(hasNameLike(filter.getKeyword()));
+        if (filter.getKeywords() != null && !filter.getKeywords().isEmpty()) {
+            spec = spec.and(hasNameLike(filter.getKeywords()));
+        }
 
         if (filter.getMinPrice() != null || filter.getMaxPrice() != null)
             spec = spec.and(hasPriceBetween(filter.getMinPrice(), filter.getMaxPrice()));

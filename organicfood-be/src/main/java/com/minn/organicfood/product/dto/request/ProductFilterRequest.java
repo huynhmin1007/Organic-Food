@@ -26,7 +26,7 @@ public class ProductFilterRequest {
 
     private List<Long> brandIds;
     private List<String> brandSlugs;
-    private String keyword;
+    private List<String> keywords;
 
     private Long minPrice;
     private Long maxPrice;

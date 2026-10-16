@@ -10,7 +10,7 @@ export interface ProductFilter {
   includeDescendants?: boolean;
   brandIds?: number[];
   brandSlugs?: string[];
-  keyword?: string;
+  keywords?: string[];
   minPrice?: number;
   maxPrice?: number;
   onSale?: boolean;

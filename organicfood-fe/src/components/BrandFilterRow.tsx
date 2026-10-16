@@ -34,7 +34,7 @@ export default function BrandFilterRow({ brands }: { brands: Brand[] }) {
             key={b.id}
             onClick={() => toggleBrand(b.slug)}
             className={clsx(
-              "relative shrink-0 w-16 border rounded-md overflow-hidden cursor-pointer border-neutral-300",
+              "relative max-w-16 border rounded-md overflow-hidden cursor-pointer border-neutral-300",
             )}
           >
             {isSelected && (
