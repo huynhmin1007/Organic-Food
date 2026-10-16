@@ -23,7 +23,7 @@ export function parseProductFilter(
   if (brandSlugs.length > 0) filter.brandSlugs = brandSlugs;
 
   const keyword = searchParams.get("keyword");
-  if (keyword) filter.keyword = keyword;
+  if (keyword) filter.keywords = [keyword];
 
   const minPrice = parseIntOrUndefined(searchParams.get("minPrice"));
   if (minPrice !== undefined) filter.minPrice = minPrice;

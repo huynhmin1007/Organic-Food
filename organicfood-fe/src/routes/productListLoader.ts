@@ -9,7 +9,7 @@ export async function productListLoader({ request }: LoaderFunctionArgs) {
     getProducts(filter),
     getProducts({
       categorySlugs: filter.categorySlugs,
-      keyword: filter.keyword,
+      keywords: filter.keywords,
       onSale: true,
       size: 10,
       includeDescendants: true,
