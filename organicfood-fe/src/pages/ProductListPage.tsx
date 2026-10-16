@@ -47,7 +47,7 @@ export default function ProductListPage() {
 
   const currentSort = searchParams.get("sort") ?? "";
 
-  const searchKeyword = filter.keyword ?? undefined;
+  const searchKeyword = filter.keywords?.[0] ?? undefined;
   const categorySlug = searchParams.get("categorySlug") ?? undefined;
   const similar = findSimilarCategories(categories, searchKeyword);
 
